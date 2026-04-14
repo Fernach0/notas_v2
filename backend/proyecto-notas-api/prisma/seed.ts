@@ -1,7 +1,10 @@
+import 'dotenv/config';
 import { PrismaClient, EstadoUsuario, EstadoLectivo } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcrypt';
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   // 1. Roles fijos
@@ -39,7 +42,47 @@ async function main() {
     create: { idUsuario: admin.idUsuario, idRol: 1 },
   });
 
-  // 3. Año lectivo base ACTIVO
+  // 3. Usuario PROFESOR de prueba
+  const hashedProfesor = await bcrypt.hash('Profesor#2026', 10);
+  const profesor = await prisma.usuario.upsert({
+    where: { idUsuario: '1700000001' },
+    update: {},
+    create: {
+      idUsuario: '1700000001',
+      nombreCompleto: 'Carlos Mendoza Ríos',
+      contrasenaUsuario: hashedProfesor,
+      estadoUsuario: EstadoUsuario.ACTIVO,
+      email: 'profesor@notas.edu.ec',
+    },
+  });
+
+  await prisma.usuarioRol.upsert({
+    where: { idUsuario_idRol: { idUsuario: profesor.idUsuario, idRol: 2 } },
+    update: {},
+    create: { idUsuario: profesor.idUsuario, idRol: 2 },
+  });
+
+  // 4. Usuario ESTUDIANTE de prueba
+  const hashedEstudiante = await bcrypt.hash('Estudiante#2026', 10);
+  const estudiante = await prisma.usuario.upsert({
+    where: { idUsuario: '1700000019' },
+    update: {},
+    create: {
+      idUsuario: '1700000019',
+      nombreCompleto: 'Ana Torres Vega',
+      contrasenaUsuario: hashedEstudiante,
+      estadoUsuario: EstadoUsuario.ACTIVO,
+      email: 'estudiante@notas.edu.ec',
+    },
+  });
+
+  await prisma.usuarioRol.upsert({
+    where: { idUsuario_idRol: { idUsuario: estudiante.idUsuario, idRol: 3 } },
+    update: {},
+    create: { idUsuario: estudiante.idUsuario, idRol: 3 },
+  });
+
+  // 5. Año lectivo base ACTIVO
   await prisma.anioLectivo.upsert({
     where: { idAnioLectivo: 1 },
     update: {},

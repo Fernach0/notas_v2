@@ -4,7 +4,14 @@
       "Bash(npm --version)",
       "Bash(npx @nestjs/cli --version)",
       "Bash(nest --version)",
-      "Bash(npx --yes @nestjs/cli new proyecto-notas-api --package-manager npm --skip-git)"
+      "Bash(npx --yes @nestjs/cli new proyecto-notas-api --package-manager npm --skip-git)",
+      "Bash(npx prisma:*)",
+      "Bash(PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION=\"si, procede\" npx prisma migrate reset --force)",
+      "Bash(npm run:*)",
+      "Bash(curl -s http://localhost:3000/api/v1)",
+      "Bash(curl -s http://localhost:3000/api/docs-json)",
+      "Bash(curl -s -X POST http://localhost:3000/api/auth/login -H \"Content-Type: application/json\" -d \"{\\\\\"email\\\\\":\\\\\"profesor@notas.edu.ec\\\\\",\\\\\"password\\\\\":\\\\\"Profesor#2026\\\\\"}\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/auth/login -H \"Content-Type: application/json\" -d \"{\\\\\"email\\\\\":\\\\\"estudiante@notas.edu.ec\\\\\",\\\\\"password\\\\\":\\\\\"Estudiante#2026\\\\\"}\")"
     ]
   }
 }
