@@ -1,0 +1,39 @@
+# ============================================================
+#  .gitignore — raíz del monorepo "notas_v2"
+# ============================================================
+
+# Dependencias de Node (backend y frontend)
+**/node_modules/
+
+# Variables de entorno — NUNCA al repo
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Builds
+**/dist/
+**/build/
+**/.next/
+
+# Archivos subidos por usuarios
+**/storage/
+
+# Logs
+**/*.log
+**/npm-debug.log*
+**/pnpm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+
+# Editores
+**/.vscode/
+**/.idea/
+**/*.suo
+**/*.ntvs*
+**/*.njsproj
+**/*.sln
+**/*.sw?
+
+# Sistema operativo
+**/.DS_Store
+**/Thumbs.db

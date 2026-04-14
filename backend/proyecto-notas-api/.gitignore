@@ -1,0 +1,39 @@
+# Dependencias
+node_modules/
+
+# Variables de entorno — NUNCA subir al repo
+.env
+.env.local
+.env.*.local
+
+# Build
+dist/
+build/
+
+# Archivos subidos por usuarios
+storage/
+
+# Prisma — migraciones generadas localmente (opcional: subir si el equipo las usa)
+# prisma/migrations/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+/generated/prisma

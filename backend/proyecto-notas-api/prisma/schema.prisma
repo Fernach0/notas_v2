@@ -1,0 +1,274 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ========== ENUMS ==========
+enum EstadoUsuario {
+  ACTIVO
+  INACTIVO
+  BLOQUEADO
+}
+
+enum EstadoLectivo {
+  ACTIVO
+  FINALIZADO
+  PLANIFICADO
+}
+
+enum EstadoEvidencia {
+  ACTIVO
+  ELIMINADO
+}
+
+enum TipoActividad {
+  TAREA
+  EXAMEN
+  PROYECTO
+  LECCION
+}
+
+enum TipoNotificacion {
+  NUEVA_ACTIVIDAD
+  CALIFICACION
+  RECORDATORIO
+  SISTEMA
+}
+
+// ========== MODELOS ==========
+model AnioLectivo {
+  idAnioLectivo Int           @id @default(autoincrement()) @map("id_aniolectivo")
+  fechaInicio   DateTime      @map("fecha_inicio") @db.Date
+  fechaFinal    DateTime      @map("fecha_final") @db.Date
+  estadoLectivo EstadoLectivo @map("estado_lectivo")
+
+  cursos       Curso[]
+  promediosMat PromedioMateriaEstudiante[]
+
+  @@map("anio_lectivo")
+}
+
+model Usuario {
+  idUsuario         String        @id @map("id_usuario") @db.VarChar(10)
+  nombreCompleto    String        @map("nombre_completo") @db.VarChar(100)
+  contrasenaUsuario String        @map("contrasena_usuario") @db.VarChar(255)
+  estadoUsuario     EstadoUsuario @map("estado_usuario")
+  email             String?       @unique @db.VarChar(255)
+  tokenRecuperacion String?       @map("token_recuperacion") @db.VarChar(255)
+  expiracionToken   DateTime?     @map("expiracion_token")
+
+  roles              UsuarioRol[]
+  cursos             UsuarioCurso[]
+  docencias          ProfesorMateriaCurso[]
+  calificaciones     Calificacion[]
+  evidencias         Evidencia[]
+  notificaciones     Notificacion[]
+  promediosMateria   PromedioMateriaEstudiante[]
+  promediosGenerales PromedioGeneralEstudiante[]
+
+  @@map("usuario")
+}
+
+model Rol {
+  idRol     Int    @id @default(autoincrement()) @map("id_rol")
+  nombreRol String @map("nombre_rol") @db.VarChar(20)
+
+  usuarios UsuarioRol[]
+
+  @@map("rol")
+}
+
+model UsuarioRol {
+  idUsuario String @map("id_usuario") @db.VarChar(10)
+  idRol     Int    @map("id_rol")
+
+  usuario Usuario @relation(fields: [idUsuario], references: [idUsuario], onDelete: Cascade)
+  rol     Rol     @relation(fields: [idRol], references: [idRol])
+
+  @@id([idUsuario, idRol])
+  @@map("usuario_rol")
+}
+
+model Curso {
+  idCurso       Int @id @default(autoincrement()) @map("id_curso")
+  idAnioLectivo Int @map("id_aniolectivo")
+  nombreCurso   String @map("nombre_curso") @db.VarChar(15)
+
+  anioLectivo  AnioLectivo            @relation(fields: [idAnioLectivo], references: [idAnioLectivo])
+  estudiantes  UsuarioCurso[]
+  materias     CursoMateria[]
+  docentes     ProfesorMateriaCurso[]
+  parciales    Parcial[]
+  promediosMat PromedioMateriaEstudiante[]
+  promediosGen PromedioGeneralEstudiante[]
+
+  @@map("curso")
+}
+
+model UsuarioCurso {
+  idUsuario String @map("id_usuario") @db.VarChar(10)
+  idCurso   Int    @map("id_curso")
+
+  usuario Usuario @relation(fields: [idUsuario], references: [idUsuario], onDelete: Cascade)
+  curso   Curso   @relation(fields: [idCurso], references: [idCurso], onDelete: Cascade)
+
+  @@id([idUsuario, idCurso])
+  @@map("usuario_curso")
+}
+
+model Materia {
+  idMateria     Int    @id @default(autoincrement()) @map("id_materia")
+  nombreMateria String @map("nombre_materia") @db.VarChar(30)
+
+  cursos       CursoMateria[]
+  parciales    Parcial[]
+  docentes     ProfesorMateriaCurso[]
+  promediosMat PromedioMateriaEstudiante[]
+
+  @@map("materia")
+}
+
+model CursoMateria {
+  idCurso   Int @map("id_curso")
+  idMateria Int @map("id_materia")
+
+  curso   Curso   @relation(fields: [idCurso], references: [idCurso], onDelete: Cascade)
+  materia Materia @relation(fields: [idMateria], references: [idMateria], onDelete: Cascade)
+
+  @@id([idCurso, idMateria])
+  @@map("curso_materia")
+}
+
+model ProfesorMateriaCurso {
+  idUsuario String @map("id_usuario") @db.VarChar(10)
+  idCurso   Int    @map("id_curso")
+  idMateria Int    @map("id_materia")
+
+  usuario Usuario @relation(fields: [idUsuario], references: [idUsuario], onDelete: Cascade)
+  curso   Curso   @relation(fields: [idCurso], references: [idCurso], onDelete: Cascade)
+  materia Materia @relation(fields: [idMateria], references: [idMateria], onDelete: Cascade)
+
+  @@id([idUsuario, idCurso, idMateria])
+  @@map("profesor_materia_curso")
+}
+
+model Parcial {
+  idParcial     Int @id @default(autoincrement()) @map("id_parcial")
+  idMateria     Int @map("id_materia")
+  idCurso       Int @map("id_curso")
+  numeroParcial Int @map("numero_parcial")
+
+  materia     Materia     @relation(fields: [idMateria], references: [idMateria])
+  curso       Curso       @relation(fields: [idCurso], references: [idCurso])
+  actividades Actividad[]
+
+  @@unique([idMateria, idCurso, numeroParcial], map: "uq_parcial_materia_curso_numero")
+  @@map("parcial")
+}
+
+model Actividad {
+  idActividad        Int           @id @default(autoincrement()) @map("id_actividad")
+  idParcial          Int           @map("id_parcial")
+  tipoActividad      TipoActividad @map("tipo_actividad")
+  fechaInicioEntrega DateTime      @map("fecha_inicio_entrega") @db.Date
+  fechaFinEntrega    DateTime      @map("fecha_fin_entrega") @db.Date
+  descripcion        String?       @db.VarChar(200)
+  tituloActividad    String?       @map("titulo_actividad") @db.VarChar(20)
+  valorMaximo        Float         @default(100.0) @map("valor_maximo")
+
+  parcial        Parcial        @relation(fields: [idParcial], references: [idParcial])
+  calificaciones Calificacion[]
+  evidencias     Evidencia[]
+  notificaciones Notificacion[]
+
+  @@map("actividad")
+}
+
+model Calificacion {
+  idCalificacion Int     @id @default(autoincrement()) @map("id_calificacion")
+  idUsuario      String  @map("id_usuario") @db.VarChar(10)
+  idActividad    Int     @map("id_actividad")
+  nota           Float
+  comentario     String? @db.VarChar(200)
+
+  usuario   Usuario   @relation(fields: [idUsuario], references: [idUsuario])
+  actividad Actividad @relation(fields: [idActividad], references: [idActividad])
+
+  @@unique([idUsuario, idActividad])
+  @@map("calificacion")
+}
+
+model Evidencia {
+  idEvidencia     Int             @id @default(autoincrement()) @map("id_evidencia")
+  idUsuario       String          @map("id_usuario") @db.VarChar(10)
+  idActividad     Int             @map("id_actividad")
+  urlArchivo      String?         @map("url_archivo") @db.VarChar(255)
+  nombreArchivo   String          @map("nombre_archivo") @db.VarChar(255)
+  fechaSubida     DateTime?       @default(now()) @map("fecha_subida")
+  tamanio         BigInt
+  tipoContenido   String          @map("tipo_contenido") @db.VarChar(255)
+  estado          EstadoEvidencia @default(ACTIVO)
+  nombreActividad String          @map("nombre_actividad") @db.VarChar(255)
+  codigoActividad String          @unique @map("codigo_actividad") @db.VarChar(255)
+  tipoActividad   String          @map("tipo_actividad") @db.VarChar(255)
+
+  usuario   Usuario   @relation(fields: [idUsuario], references: [idUsuario])
+  actividad Actividad @relation(fields: [idActividad], references: [idActividad])
+
+  @@unique([idUsuario, idActividad])
+  @@map("evidencias")
+}
+
+model Notificacion {
+  idNotificacion      Int              @id @default(autoincrement()) @map("id_notificacion")
+  idUsuario           String           @map("id_usuario") @db.VarChar(10)
+  idActividad         Int?             @map("id_actividad")
+  tipoNotificacion    TipoNotificacion @map("tipo_notificacion")
+  mensajeNotificacion String           @map("mensaje_notificacion") @db.VarChar(255)
+  fechaNotificacion   DateTime         @map("fecha_notificacion")
+  leida               Boolean          @default(false)
+
+  usuario   Usuario    @relation(fields: [idUsuario], references: [idUsuario])
+  actividad Actividad? @relation(fields: [idActividad], references: [idActividad])
+
+  @@map("notificaciones")
+}
+
+model PromedioMateriaEstudiante {
+  idPromedioMateria    Int       @id @default(autoincrement()) @map("id_promedio_materia")
+  idUsuario            String    @map("id_usuario") @db.VarChar(10)
+  idAnioLectivo        Int       @map("id_aniolectivo")
+  idCurso              Int       @map("id_curso")
+  idMateria            Int       @map("id_materia")
+  promedioParcial1     Float?    @map("promedio_parcial1")
+  promedioParcial2     Float?    @map("promedio_parcial2")
+  promedioParcial3     Float?    @map("promedio_parcial3")
+  promedioFinalMateria Float?    @map("promedio_final_materia")
+  fechaActualizacion   DateTime? @map("fecha_actualizacion")
+
+  usuario     Usuario     @relation(fields: [idUsuario], references: [idUsuario])
+  anioLectivo AnioLectivo @relation(fields: [idAnioLectivo], references: [idAnioLectivo])
+  curso       Curso       @relation(fields: [idCurso], references: [idCurso])
+  materia     Materia     @relation(fields: [idMateria], references: [idMateria])
+
+  @@unique([idUsuario, idAnioLectivo, idCurso, idMateria])
+  @@map("promedio_materia_estudiante")
+}
+
+model PromedioGeneralEstudiante {
+  idPromedioGeneral Int    @id @default(autoincrement()) @map("id_promedio_general")
+  idUsuario         String @map("id_usuario") @db.VarChar(10)
+  idCurso           Int    @map("id_curso")
+  promedioGeneral   Float  @map("promedio_general")
+  comportamiento    String @db.VarChar(1)
+
+  usuario Usuario @relation(fields: [idUsuario], references: [idUsuario])
+  curso   Curso   @relation(fields: [idCurso], references: [idCurso])
+
+  @@unique([idUsuario, idCurso])
+  @@map("promediogeneralestudiante")
+}
