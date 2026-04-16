@@ -3,7 +3,8 @@ import { Usuario, CreateUsuarioDto, UpdateUsuarioDto } from '@/types';
 
 export const usuariosService = {
   getAll: (params?: { rol?: number; estado?: string }) =>
-    api.get<Usuario[]>('/usuarios', { params }).then((r) => r.data),
+    api.get<{ data: Usuario[]; total: number; page: number; limit: number }>('/usuarios', { params })
+      .then((r) => r.data.data),
 
   getOne: (idUsuario: string) =>
     api.get<Usuario>(`/usuarios/${idUsuario}`).then((r) => r.data),

@@ -53,8 +53,11 @@ export class EvidenciasController {
     @Param('id', ParseIntPipe) id: number,
     @Res() res: Response,
   ) {
-    const filePath = await this.service.getFilePath(id);
-    return res.download(filePath);
+    const { buffer, nombreArchivo, tipoContenido } = await this.service.getFileBuffer(id);
+    res.setHeader('Content-Type', tipoContenido);
+    res.setHeader('Content-Disposition', `attachment; filename="${nombreArchivo}"`);
+    res.setHeader('Content-Length', buffer.length);
+    res.send(buffer);
   }
 
   @Roles(1, 3)

@@ -11,6 +11,9 @@ const geistSans = Geist({
 export const metadata: Metadata = {
   title: 'Proyecto Notas',
   description: 'Sistema de gestión académica — Ecuador',
+  icons: {
+    icon: '/icon.svg',
+  },
 };
 
 export default function RootLayout({

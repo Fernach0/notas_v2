@@ -1,17 +1,15 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateEvidenciaDto } from './dto/create-evidencia.dto';
-import * as path from 'path';
-import * as fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
+
+// Multer Buffer → Uint8Array<ArrayBuffer> que requieren los tipos de Prisma Bytes
+const toBytes = (buf: Buffer): Uint8Array<ArrayBuffer> =>
+  new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength) as Uint8Array<ArrayBuffer>;
 
 @Injectable()
 export class EvidenciasService {
-  constructor(
-    private prisma: PrismaService,
-    private config: ConfigService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(
     idUsuario: string,
@@ -28,36 +26,18 @@ export class EvidenciasService {
 
     const actividad = await this.prisma.actividad.findUnique({
       where: { idActividad: dto.idActividad },
-      include: { parcial: { include: { curso: { include: { anioLectivo: true } } } } },
     });
     if (!actividad) throw new NotFoundException('Actividad no encontrada');
 
     const usuario = await this.prisma.usuario.findUnique({ where: { idUsuario } });
     if (!usuario) throw new NotFoundException('Usuario no encontrado');
 
-    const anio = actividad.parcial.curso.anioLectivo.fechaInicio.getFullYear();
-    const codigoCurso = actividad.parcial.curso.idCurso;
     const codigoActividad = uuidv4();
-
-    const storagePath = this.config.get<string>('STORAGE_PATH', './storage/pdfs');
-    const dir = path.join(storagePath, String(anio), String(codigoCurso), idUsuario);
-    fs.mkdirSync(dir, { recursive: true });
-
-    const filename = `${codigoActividad}.pdf`;
-    const fullPath = path.join(dir, filename);
-    fs.writeFileSync(fullPath, file.buffer);
-
-    const urlRelativa = path.join(
-      String(anio),
-      String(codigoCurso),
-      idUsuario,
-      filename,
-    ).replace(/\\/g, '/');
 
     return this.prisma.evidencia.upsert({
       where: { idUsuario_idActividad: { idUsuario, idActividad: dto.idActividad } },
       update: {
-        urlArchivo: urlRelativa,
+        archivoBytes: toBytes(file.buffer),
         nombreArchivo: file.originalname,
         tamanio: BigInt(file.size),
         tipoContenido: file.mimetype,
@@ -67,7 +47,7 @@ export class EvidenciasService {
       create: {
         idUsuario,
         idActividad: dto.idActividad,
-        urlArchivo: urlRelativa,
+        archivoBytes: toBytes(file.buffer),
         nombreArchivo: file.originalname,
         tamanio: BigInt(file.size),
         tipoContenido: file.mimetype,
@@ -82,30 +62,54 @@ export class EvidenciasService {
   findAll(idActividad?: number) {
     return this.prisma.evidencia.findMany({
       where: idActividad ? { idActividad } : undefined,
-      include: { usuario: { omit: { contrasenaUsuario: true, tokenRecuperacion: true } } },
+      select: {
+        idEvidencia: true,
+        idUsuario: true,
+        idActividad: true,
+        nombreArchivo: true,
+        fechaSubida: true,
+        tamanio: true,
+        tipoContenido: true,
+        estado: true,
+        nombreActividad: true,
+        codigoActividad: true,
+        tipoActividad: true,
+        // archivoBytes excluido del listado para no transferir datos masivos
+        usuario: {
+          select: {
+            idUsuario: true,
+            nombreCompleto: true,
+            estadoUsuario: true,
+            email: true,
+          },
+        },
+      },
     });
   }
 
-  async getFilePath(id: number) {
-    const ev = await this.prisma.evidencia.findUnique({ where: { idEvidencia: id } });
-    if (!ev || !ev.urlArchivo) throw new NotFoundException('Evidencia no encontrada');
-    const storagePath = this.config.get<string>('STORAGE_PATH', './storage/pdfs');
-    return path.join(storagePath, ev.urlArchivo);
+  async getFileBuffer(id: number): Promise<{ buffer: Buffer; nombreArchivo: string; tipoContenido: string }> {
+    const ev = await this.prisma.evidencia.findUnique({
+      where: { idEvidencia: id },
+      select: { archivoBytes: true, nombreArchivo: true, tipoContenido: true, estado: true },
+    });
+    if (!ev) throw new NotFoundException('Evidencia no encontrada');
+    if (!ev.archivoBytes) {
+      throw new NotFoundException('El archivo de esta evidencia ya no está disponible');
+    }
+    return {
+      buffer: Buffer.from(ev.archivoBytes),
+      nombreArchivo: ev.nombreArchivo,
+      tipoContenido: ev.tipoContenido,
+    };
   }
 
   async softDelete(id: number) {
     const ev = await this.prisma.evidencia.findUnique({ where: { idEvidencia: id } });
     if (!ev) throw new NotFoundException('Evidencia no encontrada');
 
-    if (ev.urlArchivo) {
-      const storagePath = this.config.get<string>('STORAGE_PATH', './storage/pdfs');
-      const fullPath = path.join(storagePath, ev.urlArchivo);
-      if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
-    }
-
     return this.prisma.evidencia.update({
       where: { idEvidencia: id },
-      data: { estado: 'ELIMINADO', urlArchivo: null },
+      data: { estado: 'ELIMINADO', archivoBytes: null },
     });
   }
 }

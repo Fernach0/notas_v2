@@ -37,3 +37,6 @@
 # Sistema operativo
 **/.DS_Store
 **/Thumbs.db
+
+#claude
+**/*.claude/

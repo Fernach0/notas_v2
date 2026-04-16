@@ -9,9 +9,19 @@ import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { EstadoUsuario } from '@prisma/client';
 
+// Campos seguros a devolver en cualquier respuesta de usuario
+const USUARIO_SELECT = {
+  idUsuario: true,
+  nombreCompleto: true,
+  estadoUsuario: true,
+  email: true,
+  expiracionToken: true,
+  // contrasenaUsuario y tokenRecuperacion quedan excluidos
+} as const;
+
 @Injectable()
 export class UsuariosService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateUsuarioDto) {
     const existe = await this.prisma.usuario.findUnique({
@@ -20,7 +30,7 @@ export class UsuariosService {
     if (existe) throw new ConflictException('Ya existe un usuario con esa cédula');
 
     const hash = await bcrypt.hash(dto.contrasenaUsuario, 10);
-    const usuario = await this.prisma.usuario.create({
+    await this.prisma.usuario.create({
       data: {
         idUsuario: dto.idUsuario,
         nombreCompleto: dto.nombreCompleto,
@@ -31,9 +41,10 @@ export class UsuariosService {
           ? { create: dto.roles.map((idRol) => ({ idRol })) }
           : undefined,
       },
-      include: { roles: true },
     });
-    return usuario;
+
+    // Retornamos mediante findOne para asegurar shape consistente sin hash
+    return this.findOne(dto.idUsuario);
   }
 
   async findAll(rol?: number, estado?: EstadoUsuario, page = 1, limit = 20) {
@@ -47,8 +58,10 @@ export class UsuariosService {
         where,
         skip,
         take: limit,
-        include: { roles: { select: { idRol: true } } },
-        omit: { contrasenaUsuario: true, tokenRecuperacion: true },
+        select: {
+          ...USUARIO_SELECT,
+          roles: { select: { idRol: true } },
+        },
       }),
       this.prisma.usuario.count({ where }),
     ]);
@@ -58,8 +71,10 @@ export class UsuariosService {
   async findOne(idUsuario: string) {
     const usuario = await this.prisma.usuario.findUnique({
       where: { idUsuario },
-      include: { roles: { select: { idRol: true, rol: true } } },
-      omit: { contrasenaUsuario: true, tokenRecuperacion: true },
+      select: {
+        ...USUARIO_SELECT,
+        roles: { select: { idRol: true, rol: true } },
+      },
     });
     if (!usuario) throw new NotFoundException('Usuario no encontrado');
     return usuario;
@@ -70,7 +85,10 @@ export class UsuariosService {
     return this.prisma.usuario.update({
       where: { idUsuario },
       data: dto,
-      omit: { contrasenaUsuario: true, tokenRecuperacion: true },
+      select: {
+        ...USUARIO_SELECT,
+        roles: { select: { idRol: true } },
+      },
     });
   }
 

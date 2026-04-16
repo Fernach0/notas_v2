@@ -117,6 +117,7 @@ model UsuarioCurso {
   curso   Curso   @relation(fields: [idCurso], references: [idCurso], onDelete: Cascade)
 
   @@id([idUsuario, idCurso])
+  @@unique([idUsuario])
   @@map("usuario_curso")
 }
 
@@ -206,7 +207,7 @@ model Evidencia {
   idEvidencia     Int             @id @default(autoincrement()) @map("id_evidencia")
   idUsuario       String          @map("id_usuario") @db.VarChar(10)
   idActividad     Int             @map("id_actividad")
-  urlArchivo      String?         @map("url_archivo") @db.VarChar(255)
+  archivoBytes    Bytes?          @map("archivo_bytes")
   nombreArchivo   String          @map("nombre_archivo") @db.VarChar(255)
   fechaSubida     DateTime?       @default(now()) @map("fecha_subida")
   tamanio         BigInt

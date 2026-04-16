@@ -2,17 +2,15 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
-import * as fs from 'fs';
-import * as path from 'path';
 
 @Injectable()
 export class RetencionEvidenciasService {
   private readonly logger = new Logger(RetencionEvidenciasService.name);
-  private lastRunStatus: { fecha: Date; eliminadas: number } | null = null;
+  private lastRunStatus: { fecha: Date; limpiadas: number } | null = null;
 
   constructor(
-    private prisma: PrismaService,
-    private config: ConfigService,
+    private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
   ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
@@ -22,7 +20,6 @@ export class RetencionEvidenciasService {
   }
 
   async ejecutar(idAnioLectivo?: number) {
-    const storagePath = this.config.get<string>('STORAGE_PATH', './storage/pdfs');
     const diasRetencion = Number(this.config.get('DIAS_RETENCION', '30'));
 
     const fechaLimite = new Date();
@@ -36,41 +33,41 @@ export class RetencionEvidenciasService {
       },
     });
 
-    let eliminadas = 0;
+    let limpiadas = 0;
 
     for (const anio of anios) {
       const evidencias = await this.prisma.evidencia.findMany({
         where: {
           estado: 'ACTIVO',
-          urlArchivo: { not: null },
+          archivoBytes: { not: null },
           actividad: {
             parcial: {
               curso: { idAnioLectivo: anio.idAnioLectivo },
             },
           },
         },
+        select: { idEvidencia: true },
       });
 
-      for (const ev of evidencias) {
-        if (ev.urlArchivo) {
-          const fullPath = path.join(storagePath, ev.urlArchivo);
-          if (fs.existsSync(fullPath)) {
-            fs.unlinkSync(fullPath);
-            this.logger.log(`Archivo eliminado: ${fullPath}`);
-          }
-        }
+      if (evidencias.length === 0) continue;
 
-        await this.prisma.evidencia.update({
-          where: { idEvidencia: ev.idEvidencia },
-          data: { estado: 'ELIMINADO', urlArchivo: null },
-        });
-        eliminadas++;
-      }
+      // Vacía los bytes en lote para liberar espacio en BD sin borrar el registro
+      await this.prisma.evidencia.updateMany({
+        where: {
+          idEvidencia: { in: evidencias.map((e) => e.idEvidencia) },
+        },
+        data: { estado: 'ELIMINADO', archivoBytes: null },
+      });
+
+      limpiadas += evidencias.length;
+      this.logger.log(
+        `Año ${anio.idAnioLectivo}: ${evidencias.length} evidencias limpiadas de la BD`,
+      );
     }
 
-    this.lastRunStatus = { fecha: new Date(), eliminadas };
-    this.logger.log(`Job completado. Evidencias eliminadas: ${eliminadas}`);
-    return { eliminadas };
+    this.lastRunStatus = { fecha: new Date(), limpiadas };
+    this.logger.log(`Job completado. Evidencias limpiadas: ${limpiadas}`);
+    return { limpiadas };
   }
 
   getLastRunStatus() {
