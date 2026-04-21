@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsOptional, IsArray, IsInt, MinLength, IsEnum } from 'class-validator';
+import { IsString, IsEmail, IsOptional, IsArray, IsInt, MinLength, IsEnum, ArrayMaxSize, ArrayMinSize } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsCedulaEcuatoriana } from '../../../common/validators/cedula.validator';
 import { EstadoUsuario } from '@prisma/client';
@@ -29,6 +29,8 @@ export class CreateUsuarioDto {
   @ApiPropertyOptional({ example: [2] })
   @IsArray()
   @IsInt({ each: true })
+  @ArrayMinSize(1, { message: 'Debe asignar exactamente un rol' })
+  @ArrayMaxSize(1, { message: 'Un usuario solo puede tener un rol' })
   @IsOptional()
   roles?: number[];
 }

@@ -1,9 +1,15 @@
 import api from '@/lib/axios';
-import { Curso, CreateCursoDto } from '@/types';
+import { Curso, CreateCursoDto, MiCurso } from '@/types';
 
 export const cursosService = {
   getAll: (idAnioLectivo?: number) =>
     api.get<Curso[]>('/cursos', { params: idAnioLectivo ? { idAnioLectivo } : {} }).then((r) => r.data),
+
+  getOne: (id: number) =>
+    api.get<Curso>(`/cursos/${id}`).then((r) => r.data),
+
+  getMisCursos: () =>
+    api.get<MiCurso[]>('/cursos/mis-cursos').then((r) => r.data),
 
   create: (dto: CreateCursoDto) =>
     api.post<Curso>('/cursos', dto).then((r) => r.data),

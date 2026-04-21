@@ -21,6 +21,7 @@ const adminNav: NavItem[] = [
   { label: 'Años Lectivos', href: '/admin/anios-lectivos', Icon: CalendarDaysIcon },
   { label: 'Cursos', href: '/admin/cursos', Icon: AcademicCapIcon },
   { label: 'Materias', href: '/admin/materias', Icon: BookOpenIcon },
+  { label: 'Calificaciones', href: '/admin/calificaciones', Icon: ChartBarIcon },
 ];
 
 const profesorNav: NavItem[] = [

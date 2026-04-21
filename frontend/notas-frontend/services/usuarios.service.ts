@@ -2,9 +2,9 @@ import api from '@/lib/axios';
 import { Usuario, CreateUsuarioDto, UpdateUsuarioDto } from '@/types';
 
 export const usuariosService = {
-  getAll: (params?: { rol?: number; estado?: string }) =>
+  getAll: (params?: { rol?: number; estado?: string; search?: string; page?: number; limit?: number }) =>
     api.get<{ data: Usuario[]; total: number; page: number; limit: number }>('/usuarios', { params })
-      .then((r) => r.data.data),
+      .then((r) => r.data),
 
   getOne: (idUsuario: string) =>
     api.get<Usuario>(`/usuarios/${idUsuario}`).then((r) => r.data),

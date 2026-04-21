@@ -12,7 +12,8 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import CursoForm from '@/components/forms/CursoForm';
 import ToastContainer from '@/components/ui/Toast';
 import Spinner, { EmptyState } from '@/components/ui/Spinner';
-import { PlusIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilSquareIcon, TrashIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
+import Link from 'next/link';
 
 export default function CursosSection() {
   const qc = useQueryClient();
@@ -33,9 +34,16 @@ export default function CursosSection() {
   });
 
   const createMutation = useMutation({
-    mutationFn: cursosService.create,
+    mutationFn: async (data: any) => {
+      const { materias, ...dto } = data;
+      const curso = await cursosService.create(dto);
+      if (materias?.length) {
+        await Promise.all(materias.map((idMateria: number) => cursosService.assignMateria(curso.idCurso, idMateria)));
+      }
+      return curso;
+    },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['cursos'] }); createModal.close(); show('Curso creado'); },
-    onError: () => show('Error al crear el curso', 'error'),
+    onError: (e: any) => show(e?.response?.data?.message ?? 'Error al crear el curso', 'error'),
   });
 
   const updateMutation = useMutation({
@@ -87,6 +95,7 @@ export default function CursosSection() {
               <tr>
                 <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Curso</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Año lectivo</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Materias</th>
                 <th className="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Acciones</th>
               </tr>
             </thead>
@@ -94,9 +103,26 @@ export default function CursosSection() {
               {cursos?.map((c) => (
                 <tr key={c.idCurso} className="hover:bg-slate-50 transition">
                   <td className="px-5 py-3.5 font-semibold text-slate-800">{c.nombreCurso}</td>
-                  <td className="px-5 py-3.5 text-slate-500 text-xs font-mono">Año {c.idAnioLectivo}</td>
+                  <td className="px-5 py-3.5 text-slate-500 text-xs">
+                    {c.anioLectivo
+                      ? `${c.anioLectivo.fechaInicio.split('T')[0]} — ${c.anioLectivo.fechaFinal.split('T')[0]}`
+                      : `Año ${c.idAnioLectivo}`}
+                  </td>
+                  <td className="px-5 py-3.5 text-xs text-slate-500">
+                    {c.materias && c.materias.length > 0
+                      ? c.materias.map((m) => m.materia.nombreMateria).join(', ')
+                      : <span className="italic text-slate-300">Sin materias</span>}
+                  </td>
                   <td className="px-5 py-3.5">
-                    <div className="flex justify-end gap-2">
+                    <div className="flex justify-end gap-1.5">
+                      <Link
+                        href={`/admin/cursos/${c.idCurso}`}
+                        title="Gestionar estudiantes y docentes"
+                        className="flex items-center gap-1 p-1.5 rounded-lg text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition text-xs font-medium"
+                      >
+                        <Cog6ToothIcon className="h-4 w-4" />
+                        Gestionar
+                      </Link>
                       <button onClick={() => editModal.open(c)} className="p-1.5 rounded-lg text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition">
                         <PencilSquareIcon className="h-4 w-4" />
                       </button>

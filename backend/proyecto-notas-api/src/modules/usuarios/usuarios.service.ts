@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -9,14 +10,12 @@ import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { EstadoUsuario } from '@prisma/client';
 
-// Campos seguros a devolver en cualquier respuesta de usuario
 const USUARIO_SELECT = {
   idUsuario: true,
   nombreCompleto: true,
   estadoUsuario: true,
   email: true,
   expiracionToken: true,
-  // contrasenaUsuario y tokenRecuperacion quedan excluidos
 } as const;
 
 @Injectable()
@@ -24,6 +23,10 @@ export class UsuariosService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateUsuarioDto) {
+    if (dto.roles && dto.roles.length > 1) {
+      throw new BadRequestException('Un usuario solo puede tener un rol asignado');
+    }
+
     const existe = await this.prisma.usuario.findUnique({
       where: { idUsuario: dto.idUsuario },
     });
@@ -43,28 +46,62 @@ export class UsuariosService {
       },
     });
 
-    // Retornamos mediante findOne para asegurar shape consistente sin hash
     return this.findOne(dto.idUsuario);
   }
 
-  async findAll(rol?: number, estado?: EstadoUsuario, page = 1, limit = 20) {
+  async findAll(
+    rol?: number,
+    estado?: EstadoUsuario,
+    search?: string,
+    page = 1,
+    limit = 20,
+  ) {
     const skip = (page - 1) * limit;
     const where: any = {};
     if (estado) where.estadoUsuario = estado;
     if (rol) where.roles = { some: { idRol: rol } };
+    if (search?.trim()) {
+      where.OR = [
+        { nombreCompleto: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { idUsuario: { contains: search } },
+      ];
+    }
+
+    const userSelect: any = {
+      ...USUARIO_SELECT,
+      roles: { select: { idRol: true } },
+    };
+
+    if (rol === 3) {
+      userSelect.cursos = {
+        select: {
+          idCurso: true,
+          curso: { select: { nombreCurso: true } },
+        },
+      };
+    }
+    if (rol === 2) {
+      userSelect.docencias = {
+        select: {
+          idCurso: true,
+          idMateria: true,
+          curso: { select: { nombreCurso: true } },
+          materia: { select: { nombreMateria: true } },
+        },
+      };
+    }
 
     const [data, total] = await Promise.all([
       this.prisma.usuario.findMany({
         where,
         skip,
         take: limit,
-        select: {
-          ...USUARIO_SELECT,
-          roles: { select: { idRol: true } },
-        },
+        select: userSelect,
       }),
       this.prisma.usuario.count({ where }),
     ]);
+
     return { data, total, page, limit };
   }
 

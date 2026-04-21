@@ -20,11 +20,13 @@ export class CalificacionesController {
   @Post('bulk')
   createBulk(@Body() dto: BulkCalificacionDto) { return this.service.createBulk(dto); }
 
+  @Roles(1, 2)
   @Get()
   findByActividad(@Query('idActividad', ParseIntPipe) idActividad: number) {
     return this.service.findByActividad(idActividad);
   }
 
+  @Roles(1, 2, 3)
   @Get('estudiante/:idUsuario')
   findByEstudiante(
     @Param('idUsuario') idUsuario: string,

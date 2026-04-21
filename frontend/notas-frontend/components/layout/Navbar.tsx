@@ -2,10 +2,11 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { BellIcon, ArrowRightStartOnRectangleIcon, XMarkIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { BellIcon, ArrowRightStartOnRectangleIcon, XMarkIcon, CheckIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificacionesService } from '@/services/notificaciones.service';
 import { Notificacion } from '@/types';
+import ProfilePanel from '@/components/ui/ProfilePanel';
 
 const fmt = (d: string) =>
   new Date(d).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -14,6 +15,7 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
   const { data: notifs } = useQuery({
@@ -96,11 +98,18 @@ export default function Navbar() {
         {/* Divider */}
         <div className="h-5 w-px bg-slate-200" />
 
-        {/* Avatar + Logout */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold">
-            {user?.nombreCompleto?.charAt(0).toUpperCase()}
-          </div>
+        {/* Avatar + Profile + Logout */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setProfileOpen((v) => !v)}
+            title="Ver perfil"
+            className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition"
+          >
+            <div className="flex items-center justify-center w-7 h-7 rounded-full bg-indigo-600 text-white text-xs font-bold">
+              {user?.nombreCompleto?.charAt(0).toUpperCase()}
+            </div>
+            <span className="hidden sm:block text-xs font-medium text-slate-700 max-w-24 truncate">{user?.nombreCompleto?.split(' ')[0]}</span>
+          </button>
           <button
             onClick={logout}
             title="Cerrar sesión"
@@ -110,6 +119,9 @@ export default function Navbar() {
           </button>
         </div>
       </div>
+
+      {/* Profile panel */}
+      <ProfilePanel open={profileOpen} onClose={() => setProfileOpen(false)} />
 
       {/* Notifications panel */}
       {open && (

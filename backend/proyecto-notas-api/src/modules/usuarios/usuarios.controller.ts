@@ -37,12 +37,14 @@ export class UsuariosController {
   findAll(
     @Query('rol') rol?: string,
     @Query('estado') estado?: EstadoUsuario,
+    @Query('search') search?: string,
     @Query('page') page = '1',
     @Query('limit') limit = '20',
   ) {
     return this.usuariosService.findAll(
       rol ? +rol : undefined,
       estado,
+      search,
       +page,
       +limit,
     );

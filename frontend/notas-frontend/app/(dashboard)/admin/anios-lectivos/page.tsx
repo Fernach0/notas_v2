@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { aniosLectivosService } from '@/services/anios-lectivos.service';
 import { useModal } from '@/hooks/useModal';
 import { useToast } from '@/hooks/useToast';
+import { useSearchDebounce } from '@/hooks/useSearchDebounce';
 import { AnioLectivo } from '@/types';
 import Modal from '@/components/ui/Modal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
@@ -11,6 +12,7 @@ import AnioLectivoForm from '@/components/forms/AnioLectivoForm';
 import ToastContainer from '@/components/ui/Toast';
 import Badge, { estadoLectivoBadge } from '@/components/ui/Badge';
 import Spinner, { EmptyState } from '@/components/ui/Spinner';
+import SearchBar from '@/components/ui/SearchBar';
 import { PlusIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 export default function AniosLectivosPage() {
@@ -19,10 +21,22 @@ export default function AniosLectivosPage() {
   const createModal = useModal();
   const editModal = useModal<AnioLectivo>();
   const deleteModal = useModal<AnioLectivo>();
+  const { searchInput, setSearchInput, debouncedSearch } = useSearchDebounce(200);
 
   const { data: anios, isLoading } = useQuery({
     queryKey: ['anios-lectivos'],
     queryFn: () => aniosLectivosService.getAll(),
+  });
+
+  const aniosFiltrados = (anios ?? []).filter((a) => {
+    if (!debouncedSearch) return true;
+    const q = debouncedSearch.toLowerCase();
+    return (
+      a.estadoLectivo.toLowerCase().includes(q) ||
+      a.fechaInicio.includes(q) ||
+      a.fechaFinal.includes(q) ||
+      String(a.idAnioLectivo).includes(q)
+    );
   });
 
   const createMutation = useMutation({
@@ -59,8 +73,17 @@ export default function AniosLectivosPage() {
         </button>
       </div>
 
+      <div className="mb-4">
+        <SearchBar
+          value={searchInput}
+          onChange={setSearchInput}
+          placeholder="Buscar por estado, fecha o ID..."
+          className="w-72"
+        />
+      </div>
+
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        {isLoading ? <Spinner /> : anios?.length === 0 ? <EmptyState message="No hay años lectivos creados" /> : (
+        {isLoading ? <Spinner /> : aniosFiltrados.length === 0 ? <EmptyState message={debouncedSearch ? 'Sin resultados para esa búsqueda' : 'No hay años lectivos creados'} /> : (
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
@@ -72,7 +95,7 @@ export default function AniosLectivosPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {anios?.map((a) => (
+              {aniosFiltrados.map((a) => (
                 <tr key={a.idAnioLectivo} className="hover:bg-slate-50 transition">
                   <td className="px-5 py-3.5 font-mono text-xs text-slate-400">{a.idAnioLectivo}</td>
                   <td className="px-5 py-3.5 text-slate-700">{fmt(a.fechaInicio)}</td>

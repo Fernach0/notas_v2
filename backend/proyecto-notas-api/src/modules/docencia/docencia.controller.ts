@@ -17,6 +17,7 @@ export class DocenciaController {
   @Post()
   create(@Body() dto: CreateDocenciaDto) { return this.service.create(dto); }
 
+  @Roles(1, 2)
   @Get()
   findAll(@Query('idUsuario') idUsuario?: string) {
     return this.service.findAll(idUsuario);

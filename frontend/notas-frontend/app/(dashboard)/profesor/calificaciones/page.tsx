@@ -127,7 +127,7 @@ export default function CalificacionesProfesorPage() {
                       </td>
                       <td className="px-5 py-3.5">
                         {c ? (
-                          <span className={`font-bold ${c.nota >= 7 ? 'text-green-600' : 'text-red-600'}`}>{c.nota}</span>
+                          <span className={`font-bold ${(c.nota ?? 0) >= 7 ? 'text-green-600' : 'text-red-600'}`}>{c.nota ?? '—'}</span>
                         ) : (
                           <span className="text-slate-400 text-xs">Sin nota</span>
                         )}
@@ -136,7 +136,7 @@ export default function CalificacionesProfesorPage() {
                       <td className="px-5 py-3.5">
                         <div className="flex justify-end">
                           <button
-                            onClick={() => califModal.open({ idUsuario: est.idUsuario, idCalificacion: c?.idCalificacion, nota: c?.nota, comentario: c?.comentario })}
+                            onClick={() => califModal.open({ idUsuario: est.idUsuario, idCalificacion: c?.idCalificacion, nota: c?.nota ?? undefined, comentario: c?.comentario })}
                             className="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 transition"
                           >
                             {c ? <PencilSquareIcon className="h-3.5 w-3.5" /> : <CheckCircleIcon className="h-3.5 w-3.5" />}

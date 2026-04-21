@@ -120,4 +120,52 @@ export class AuthService {
 
     return { message: 'Contraseña cambiada correctamente' };
   }
+
+  async getProfile(idUsuario: string) {
+    const usuario = await this.prisma.usuario.findUnique({
+      where: { idUsuario },
+      select: {
+        idUsuario: true,
+        nombreCompleto: true,
+        estadoUsuario: true,
+        email: true,
+        roles: { select: { idRol: true, rol: { select: { nombreRol: true } } } },
+      },
+    });
+    if (!usuario) throw new NotFoundException('Usuario no encontrado');
+
+    const roleIds = usuario.roles.map((r) => r.idRol);
+
+    const [matricula, docencias] = await Promise.all([
+      roleIds.includes(3)
+        ? this.prisma.usuarioCurso.findUnique({
+            where: { idUsuario },
+            select: {
+              idCurso: true,
+              curso: {
+                select: {
+                  nombreCurso: true,
+                  anioLectivo: {
+                    select: { fechaInicio: true, fechaFinal: true, estadoLectivo: true },
+                  },
+                },
+              },
+            },
+          })
+        : Promise.resolve(null),
+      roleIds.includes(2)
+        ? this.prisma.profesorMateriaCurso.findMany({
+            where: { idUsuario },
+            select: {
+              idCurso: true,
+              idMateria: true,
+              curso: { select: { nombreCurso: true } },
+              materia: { select: { nombreMateria: true } },
+            },
+          })
+        : Promise.resolve(null),
+    ]);
+
+    return { ...usuario, matricula, docencias };
+  }
 }

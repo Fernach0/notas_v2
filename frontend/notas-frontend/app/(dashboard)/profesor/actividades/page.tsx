@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { parcialesService } from '@/services/parciales.service';
@@ -65,6 +65,22 @@ export default function ActividadesProfesorPage() {
     onError: () => show('Error al eliminar', 'error'),
   });
 
+  const autoInitParciales = useMutation({
+    mutationFn: () => parcialesService.createBulk({ idCurso, idMateria }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['parciales', idCurso, idMateria] }),
+  });
+
+  useEffect(() => {
+    if (
+      parciales !== undefined &&
+      parciales.length === 0 &&
+      idCurso && idMateria &&
+      !autoInitParciales.isPending
+    ) {
+      autoInitParciales.mutate();
+    }
+  }, [parciales, idCurso, idMateria]);
+
   if (!idCurso || !idMateria) {
     return (
       <div className="text-center py-20 text-slate-500">
@@ -105,10 +121,7 @@ export default function ActividadesProfesorPage() {
       </div>
 
       {!parcialId ? (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-700">
-          No existe el Parcial {parcialActivo} para esta materia.{' '}
-          <a href="/profesor/mis-cursos" className="underline">Crear parciales</a>
-        </div>
+        <Spinner />
       ) : (
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
           {isLoading ? <Spinner /> : actividades?.length === 0 ? <EmptyState message="No hay actividades en este parcial" /> : (
