@@ -138,8 +138,8 @@ export class AuthService {
 
     const [matricula, docencias] = await Promise.all([
       roleIds.includes(3)
-        ? this.prisma.usuarioCurso.findUnique({
-            where: { idUsuario },
+        ? this.prisma.usuarioCurso.findFirst({
+            where: { idUsuario, curso: { anioLectivo: { estadoLectivo: 'ACTIVO' } } },
             select: {
               idCurso: true,
               curso: {

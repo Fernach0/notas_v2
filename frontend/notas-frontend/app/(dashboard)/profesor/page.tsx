@@ -1,10 +1,13 @@
 'use client';
 
 import { useAuth } from '@/hooks/useAuth';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cursosService } from '@/services/cursos.service';
-import { BookOpenIcon, AcademicCapIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
+import { parcialesService } from '@/services/parciales.service';
+import { useToast } from '@/hooks/useToast';
+import ToastContainer from '@/components/ui/Toast';
 import Spinner, { EmptyState } from '@/components/ui/Spinner';
+import { AcademicCapIcon, BookOpenIcon, ClipboardDocumentListIcon, CheckCircleIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
 const CARD_GRADIENTS = [
@@ -22,6 +25,8 @@ function gradientFor(idCurso: number) {
 
 export default function ProfesorDashboard() {
   const { user } = useAuth();
+  const qc = useQueryClient();
+  const { toasts, show, remove } = useToast();
 
   const { data: cursos, isLoading } = useQuery({
     queryKey: ['mis-cursos', user?.idUsuario],
@@ -29,8 +34,17 @@ export default function ProfesorDashboard() {
     enabled: !!user?.idUsuario,
   });
 
+  const bulkParcialMutation = useMutation({
+    mutationFn: ({ idCurso, idMateria }: { idCurso: number; idMateria: number }) =>
+      parcialesService.createBulk({ idCurso, idMateria }),
+    onSuccess: () => show('Parciales 1, 2 y 3 creados correctamente'),
+    onError: () => show('Error al crear parciales (puede que ya existan)', 'error'),
+  });
+
   return (
-    <div>
+    <>
+      <ToastContainer toasts={toasts} onRemove={remove} />
+
       <div className="mb-6 flex items-center gap-3">
         <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-600 shadow">
           <AcademicCapIcon className="h-6 w-6 text-white" />
@@ -52,7 +66,7 @@ export default function ProfesorDashboard() {
               key={c.idCurso}
               className={`rounded-2xl bg-gradient-to-br ${gradientFor(c.idCurso)} p-5 text-white shadow-lg`}
             >
-              {/* Curso header */}
+              {/* Header */}
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <p className="text-xs font-medium opacity-80 uppercase tracking-wide">Curso</p>
@@ -66,41 +80,49 @@ export default function ProfesorDashboard() {
                 </div>
               </div>
 
-              {/* Materias */}
-              <div className="mb-4 space-y-1.5">
+              {/* Materias con acciones */}
+              <div className="space-y-3">
                 {c.materias.map((m) => (
-                  <div key={m.idMateria} className="flex items-center gap-2 rounded-lg bg-white/15 px-3 py-2">
-                    <ClipboardDocumentListIcon className="h-3.5 w-3.5 opacity-80 shrink-0" />
-                    <span className="text-sm font-medium truncate">{m.nombreMateria}</span>
-                  </div>
-                ))}
-              </div>
+                  <div key={m.idMateria} className="rounded-xl bg-white/10 p-3">
+                    {/* Nombre */}
+                    <div className="flex items-center gap-2 mb-2.5">
+                      <ClipboardDocumentListIcon className="h-3.5 w-3.5 opacity-80 shrink-0" />
+                      <span className="text-sm font-semibold truncate">{m.nombreMateria}</span>
+                    </div>
 
-              {/* Actions */}
-              <div className="grid grid-cols-2 gap-2">
-                {c.materias.map((m) => (
-                  <Link
-                    key={`act-${m.idMateria}`}
-                    href={`/profesor/actividades?idCurso=${c.idCurso}&idMateria=${m.idMateria}`}
-                    className="text-center text-xs font-semibold rounded-lg bg-white/20 hover:bg-white/30 py-1.5 transition"
-                  >
-                    Actividades
-                  </Link>
-                ))}
-                {c.materias.map((m) => (
-                  <Link
-                    key={`cal-${m.idMateria}`}
-                    href={`/profesor/calificaciones?idCurso=${c.idCurso}&idMateria=${m.idMateria}`}
-                    className="text-center text-xs font-semibold rounded-lg bg-white/20 hover:bg-white/30 py-1.5 transition"
-                  >
-                    Calificaciones
-                  </Link>
+                    {/* 3 botones de acción */}
+                    <div className="grid grid-cols-3 gap-1.5">
+                      <Link
+                        href={`/profesor/actividades?idCurso=${c.idCurso}&idMateria=${m.idMateria}`}
+                        className="flex items-center justify-center gap-1 text-center text-xs font-semibold rounded-lg bg-white/20 hover:bg-white/30 py-1.5 transition"
+                      >
+                        <ClipboardDocumentListIcon className="h-3 w-3 shrink-0" />
+                        Actividades
+                      </Link>
+                      <Link
+                        href={`/profesor/calificaciones?idCurso=${c.idCurso}&idMateria=${m.idMateria}`}
+                        className="flex items-center justify-center gap-1 text-center text-xs font-semibold rounded-lg bg-white/20 hover:bg-white/30 py-1.5 transition"
+                      >
+                        <ChartBarIcon className="h-3 w-3 shrink-0" />
+                        Calificar
+                      </Link>
+                      <button
+                        onClick={() => bulkParcialMutation.mutate({ idCurso: c.idCurso, idMateria: m.idMateria })}
+                        disabled={bulkParcialMutation.isPending}
+                        title="Crear parciales 1, 2 y 3"
+                        className="flex items-center justify-center gap-1 text-xs font-semibold rounded-lg bg-white/20 hover:bg-white/30 py-1.5 transition disabled:opacity-50"
+                      >
+                        <CheckCircleIcon className="h-3 w-3 shrink-0" />
+                        Parciales
+                      </button>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
           ))}
         </div>
       )}
-    </div>
+    </>
   );
 }

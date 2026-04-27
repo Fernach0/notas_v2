@@ -1,4 +1,4 @@
-import { IsInt, IsEnum, IsDateString, IsOptional, IsString, IsNumber, MaxLength, Min } from 'class-validator';
+import { IsInt, IsEnum, IsDateString, IsOptional, IsString, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TipoActividad } from '@prisma/client';
 
@@ -30,10 +30,4 @@ export class CreateActividadDto {
   @IsOptional()
   @MaxLength(20)
   tituloActividad?: string;
-
-  @ApiPropertyOptional({ example: 100.0 })
-  @IsNumber()
-  @Min(0.1)
-  @IsOptional()
-  valorMaximo?: number;
 }

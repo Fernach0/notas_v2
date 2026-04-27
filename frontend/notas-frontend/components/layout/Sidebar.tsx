@@ -26,9 +26,9 @@ const adminNav: NavItem[] = [
 
 const profesorNav: NavItem[] = [
   { label: 'Dashboard', href: '/profesor', Icon: HomeIcon },
-  { label: 'Mis Cursos', href: '/profesor/mis-cursos', Icon: AcademicCapIcon },
   { label: 'Actividades', href: '/profesor/actividades', Icon: ClipboardDocumentListIcon },
   { label: 'Calificaciones', href: '/profesor/calificaciones', Icon: ChartBarIcon },
+  { label: 'Participantes', href: '/profesor/participantes', Icon: UsersIcon },
 ];
 
 const estudianteNav: NavItem[] = [

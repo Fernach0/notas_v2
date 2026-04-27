@@ -21,7 +21,7 @@ export class ParcialesController {
   @Post('bulk')
   createBulk(@Body() dto: CreateBulkParcialDto) { return this.service.createBulk(dto); }
 
-  @Roles(1, 2)
+  @Roles(1, 2, 3)
   @Get()
   findAll(@Query('idCurso') idCurso?: string, @Query('idMateria') idMateria?: string) {
     return this.service.findAll(idCurso ? +idCurso : undefined, idMateria ? +idMateria : undefined);

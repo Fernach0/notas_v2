@@ -32,6 +32,15 @@ export class PromediosController {
     return this.service.findByMateria(idUsuario, idAnioLectivo ? +idAnioLectivo : undefined);
   }
 
+  @Roles(1, 2)
+  @Get('curso-materia')
+  findByCursoMateria(
+    @Query('idCurso') idCurso: string,
+    @Query('idMateria') idMateria: string,
+  ) {
+    return this.service.findByCursoMateria(+idCurso, +idMateria);
+  }
+
   @Roles(1, 2, 3)
   @Get('general')
   findGeneral(@Query('idUsuario') idUsuario: string, @Query('idCurso') idCurso?: string) {

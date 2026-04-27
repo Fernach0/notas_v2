@@ -87,6 +87,23 @@ export class EvidenciasService {
     });
   }
 
+  // Solo los campos mínimos que necesita el estudiante para saber si ya entregó
+  findByUsuario(idUsuario: string, idActividad?: number) {
+    return this.prisma.evidencia.findMany({
+      where: {
+        idUsuario,
+        ...(idActividad ? { idActividad } : {}),
+      },
+      select: {
+        idEvidencia: true,
+        idActividad: true,
+        nombreArchivo: true,
+        fechaSubida: true,
+        estado: true,
+      },
+    });
+  }
+
   async getFileBuffer(id: number): Promise<{ buffer: Buffer; nombreArchivo: string; tipoContenido: string }> {
     const ev = await this.prisma.evidencia.findUnique({
       where: { idEvidencia: id },

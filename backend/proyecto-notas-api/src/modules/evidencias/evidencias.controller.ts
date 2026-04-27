@@ -41,10 +41,21 @@ export class EvidenciasController {
     return this.service.create(user.idUsuario, dto, file);
   }
 
+  // Profesor/Admin: todas las evidencias de una actividad (con datos del alumno)
   @Roles(1, 2)
   @Get()
   findAll(@Query('idActividad') idActividad?: string) {
     return this.service.findAll(idActividad ? +idActividad : undefined);
+  }
+
+  // Estudiante: solo sus propias evidencias (sin datos de otros alumnos)
+  @Roles(3)
+  @Get('mis-evidencias')
+  getMisEvidencias(
+    @CurrentUser() user: { idUsuario: string },
+    @Query('idActividad') idActividad?: string,
+  ) {
+    return this.service.findByUsuario(user.idUsuario, idActividad ? +idActividad : undefined);
   }
 
   @Roles(1, 2)
@@ -55,7 +66,7 @@ export class EvidenciasController {
   ) {
     const { buffer, nombreArchivo, tipoContenido } = await this.service.getFileBuffer(id);
     res.setHeader('Content-Type', tipoContenido);
-    res.setHeader('Content-Disposition', `attachment; filename="${nombreArchivo}"`);
+    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(nombreArchivo)}"`);
     res.setHeader('Content-Length', buffer.length);
     res.send(buffer);
   }

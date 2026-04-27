@@ -1,12 +1,54 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
+// Pesos de cada tipo de actividad sobre la nota del parcial (deben sumar 1.0)
+// Para cambiar los porcentajes consultar: Planes de accion/explicacion_porcentaje_notas.md
+const PESOS: Record<string, number> = {
+  TAREA:    0.20,
+  PRUEBA:   0.20,
+  PROYECTO: 0.25,
+  EXAMEN:   0.35,
+};
+
+type ActividadConCalificaciones = {
+  tipoActividad: string;
+  calificaciones: { nota: number }[];
+};
+
+function calcularPromedioParcial(actividades: ActividadConCalificaciones[]): number | null {
+  // Agrupar notas por tipo (solo actividades que tienen calificación)
+  const grupos: Record<string, number[]> = {};
+  for (const act of actividades) {
+    if (act.calificaciones.length === 0) continue;
+    if (!grupos[act.tipoActividad]) grupos[act.tipoActividad] = [];
+    grupos[act.tipoActividad].push(act.calificaciones[0].nota);
+  }
+
+  if (Object.keys(grupos).length === 0) return null;
+
+  let aporteTotal = 0;
+  let pesoAcumulado = 0;
+
+  for (const [tipo, notas] of Object.entries(grupos)) {
+    const peso = PESOS[tipo] ?? 0;
+    // Para TAREA: promedio de todas las tareas. Para otros: la nota única.
+    const promGrupo = notas.reduce((s, n) => s + n, 0) / notas.length;
+    aporteTotal += promGrupo * peso;
+    pesoAcumulado += peso;
+  }
+
+  if (pesoAcumulado === 0) return null;
+
+  // Re-normalizar sobre los pesos presentes para no penalizar tipos no creados
+  const notaFinal = (aporteTotal / pesoAcumulado) * 10;
+  return parseFloat(notaFinal.toFixed(2));
+}
+
 @Injectable()
 export class PromediosService {
   constructor(private prisma: PrismaService) {}
 
   async recalcularMateria(idUsuario: string, idCurso: number, idMateria: number, idAnioLectivo: number) {
-    // Obtener parciales del curso-materia
     const parciales = await this.prisma.parcial.findMany({
       where: { idCurso, idMateria },
       orderBy: { numeroParcial: 'asc' },
@@ -22,18 +64,12 @@ export class PromediosService {
     const promediosParciales: (number | null)[] = [null, null, null];
 
     for (const parcial of parciales) {
-      const notas = parcial.actividades
-        .flatMap((a) => a.calificaciones)
-        .map((c) => c.nota);
-      if (notas.length > 0) {
-        promediosParciales[parcial.numeroParcial - 1] =
-          notas.reduce((s, n) => s + n, 0) / notas.length;
-      }
+      promediosParciales[parcial.numeroParcial - 1] = calcularPromedioParcial(parcial.actividades);
     }
 
     const notasValidas = promediosParciales.filter((p) => p !== null) as number[];
     const promedioFinal = notasValidas.length > 0
-      ? notasValidas.reduce((s, n) => s + n, 0) / notasValidas.length
+      ? parseFloat((notasValidas.reduce((s, n) => s + n, 0) / notasValidas.length).toFixed(2))
       : null;
 
     return this.prisma.promedioMateriaEstudiante.upsert({
@@ -66,7 +102,7 @@ export class PromediosService {
     }
 
     const sum = promediosMat.reduce((s, p) => s + (p.promedioFinalMateria ?? 0), 0);
-    const promedioGeneral = sum / promediosMat.length;
+    const promedioGeneral = parseFloat((sum / promediosMat.length).toFixed(2));
 
     let comportamiento = 'E';
     if (promedioGeneral >= 9) comportamiento = 'A';
@@ -78,6 +114,17 @@ export class PromediosService {
       where: { idUsuario_idCurso: { idUsuario, idCurso } },
       update: { promedioGeneral, comportamiento },
       create: { idUsuario, idCurso, promedioGeneral, comportamiento },
+    });
+  }
+
+  // Todos los promedios de una materia en un curso (para vista del profesor)
+  findByCursoMateria(idCurso: number, idMateria: number) {
+    return this.prisma.promedioMateriaEstudiante.findMany({
+      where: { idCurso, idMateria },
+      include: {
+        usuario: { select: { idUsuario: true, nombreCompleto: true } },
+      },
+      orderBy: { usuario: { nombreCompleto: 'asc' } },
     });
   }
 

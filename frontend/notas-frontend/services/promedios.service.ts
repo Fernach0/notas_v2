@@ -12,6 +12,12 @@ export const promediosService = {
       params: { idUsuario, idCurso },
     }).then((r) => r.data),
 
+  getByCursoMateria: (idCurso: number, idMateria: number) =>
+    api.get<Array<PromedioMateria & { usuario: { idUsuario: string; nombreCompleto: string } }>>(
+      '/promedios/curso-materia',
+      { params: { idCurso, idMateria } },
+    ).then((r) => r.data),
+
   getRanking: (idCurso: number) =>
     api.get(`/promedios/curso/${idCurso}/ranking`).then((r) => r.data),
 

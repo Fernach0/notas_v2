@@ -4,7 +4,7 @@
 export type EstadoUsuario = 'ACTIVO' | 'INACTIVO' | 'BLOQUEADO';
 export type EstadoLectivo = 'ACTIVO' | 'FINALIZADO' | 'PLANIFICADO';
 export type EstadoEvidencia = 'ACTIVO' | 'ELIMINADO';
-export type TipoActividad = 'TAREA' | 'EXAMEN' | 'PROYECTO' | 'LECCION';
+export type TipoActividad = 'TAREA' | 'EXAMEN' | 'PROYECTO' | 'PRUEBA';
 export type TipoNotificacion = 'NUEVA_ACTIVIDAD' | 'CALIFICACION' | 'RECORDATORIO' | 'SISTEMA';
 
 // ============================================================

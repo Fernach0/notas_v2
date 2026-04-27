@@ -29,7 +29,7 @@ enum TipoActividad {
   TAREA
   EXAMEN
   PROYECTO
-  LECCION
+  PRUEBA
 }
 
 enum TipoNotificacion {
@@ -117,7 +117,6 @@ model UsuarioCurso {
   curso   Curso   @relation(fields: [idCurso], references: [idCurso], onDelete: Cascade)
 
   @@id([idUsuario, idCurso])
-  @@unique([idUsuario])
   @@map("usuario_curso")
 }
 
@@ -179,7 +178,7 @@ model Actividad {
   fechaFinEntrega    DateTime      @map("fecha_fin_entrega") @db.Date
   descripcion        String?       @db.VarChar(200)
   tituloActividad    String?       @map("titulo_actividad") @db.VarChar(20)
-  valorMaximo        Float         @default(100.0) @map("valor_maximo")
+  valorMaximo        Float         @default(10.0) @map("valor_maximo")
 
   parcial        Parcial        @relation(fields: [idParcial], references: [idParcial])
   calificaciones Calificacion[]
