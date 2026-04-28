@@ -503,7 +503,6 @@ export default function ActividadesProfesorPage() {
                         const { idUsuario, nombreCompleto } = est.usuario;
                         const c = califMap.get(idUsuario);
                         const ev = evidenciaMap.get(idUsuario);
-                        const url = ev ? evidenciasService.getDownloadUrl(ev.idEvidencia) : null;
                         return (
                           <tr key={idUsuario} className="hover:bg-slate-50 transition">
                             <td className="px-5 py-3.5 text-xs text-slate-400 font-mono">{idx + 1}</td>
@@ -519,16 +518,18 @@ export default function ActividadesProfesorPage() {
                               </div>
                             </td>
                             <td className="px-5 py-3.5 text-center">
-                              {url ? (
+                              {ev ? (
                                 <div className="flex items-center justify-center gap-3">
-                                  <a href={url} target="_blank" rel="noopener noreferrer"
+                                  <button
+                                    onClick={async () => { const ok = await evidenciasService.verEnPestana(ev.idEvidencia); if (!ok) show('No se pudo abrir el PDF', 'error'); }}
                                     className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 transition">
                                     <EyeIcon className="h-3.5 w-3.5" /> Ver PDF
-                                  </a>
-                                  <a href={url} download
+                                  </button>
+                                  <button
+                                    onClick={async () => { const ok = await evidenciasService.descargar(ev.idEvidencia); if (!ok) show('No se pudo descargar el PDF', 'error'); }}
                                     className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-700 transition">
                                     <ArrowDownTrayIcon className="h-3.5 w-3.5" /> Descargar
-                                  </a>
+                                  </button>
                                 </div>
                               ) : (
                                 <span className="flex items-center justify-center gap-1.5 text-xs text-slate-400">

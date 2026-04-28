@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateEvidenciaDto } from './dto/create-evidencia.dto';
 import { v4 as uuidv4 } from 'uuid';
@@ -104,12 +104,15 @@ export class EvidenciasService {
     });
   }
 
-  async getFileBuffer(id: number): Promise<{ buffer: Buffer; nombreArchivo: string; tipoContenido: string }> {
+  async getFileBuffer(id: number, idUsuarioCheck?: string): Promise<{ buffer: Buffer; nombreArchivo: string; tipoContenido: string }> {
     const ev = await this.prisma.evidencia.findUnique({
       where: { idEvidencia: id },
-      select: { archivoBytes: true, nombreArchivo: true, tipoContenido: true, estado: true },
+      select: { archivoBytes: true, nombreArchivo: true, tipoContenido: true, estado: true, idUsuario: true },
     });
     if (!ev) throw new NotFoundException('Evidencia no encontrada');
+    if (idUsuarioCheck && ev.idUsuario !== idUsuarioCheck) {
+      throw new ForbiddenException('No tienes permiso para acceder a esta evidencia');
+    }
     if (!ev.archivoBytes) {
       throw new NotFoundException('El archivo de esta evidencia ya no está disponible');
     }

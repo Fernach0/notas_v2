@@ -48,6 +48,12 @@ export class PromediosController {
   }
 
   @Roles(1, 2)
+  @Post('curso-materia/recalcular-todo')
+  recalcularTodo(@Body() body: { idCurso: number; idMateria: number }) {
+    return this.service.recalcularTodo(body.idCurso, body.idMateria);
+  }
+
+  @Roles(1, 2)
   @Get('curso/:idCurso/ranking')
   getRanking(@Param('idCurso', ParseIntPipe) idCurso: number) {
     return this.service.getRanking(idCurso);

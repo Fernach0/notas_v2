@@ -30,4 +30,7 @@ export const promediosService = {
 
   recalcularGeneral: (dto: { idUsuario: string; idCurso: number }) =>
     api.post('/promedios/general/recalcular', dto).then((r) => r.data),
+
+  recalcularTodo: (dto: { idCurso: number; idMateria: number }) =>
+    api.post<{ recalculados: number }>('/promedios/curso-materia/recalcular-todo', dto).then((r) => r.data),
 };

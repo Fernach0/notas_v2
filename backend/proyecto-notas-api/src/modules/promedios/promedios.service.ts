@@ -4,8 +4,8 @@ import { PrismaService } from '../../prisma/prisma.service';
 // Pesos de cada tipo de actividad sobre la nota del parcial (deben sumar 1.0)
 // Para cambiar los porcentajes consultar: Planes de accion/explicacion_porcentaje_notas.md
 const PESOS: Record<string, number> = {
-  TAREA:    0.20,
-  PRUEBA:   0.20,
+  TAREA:    0.2,
+  PRUEBA:   0.2,
   PROYECTO: 0.25,
   EXAMEN:   0.35,
 };
@@ -40,13 +40,13 @@ function calcularPromedioParcial(actividades: ActividadConCalificaciones[]): num
   if (pesoAcumulado === 0) return null;
 
   // Re-normalizar sobre los pesos presentes para no penalizar tipos no creados
-  const notaFinal = (aporteTotal / pesoAcumulado) * 10;
-  return parseFloat(notaFinal.toFixed(2));
+  const notaFinal = aporteTotal / pesoAcumulado;
+  return Number.parseFloat(notaFinal.toFixed(2));
 }
 
 @Injectable()
 export class PromediosService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async recalcularMateria(idUsuario: string, idCurso: number, idMateria: number, idAnioLectivo: number) {
     const parciales = await this.prisma.parcial.findMany({
@@ -69,7 +69,7 @@ export class PromediosService {
 
     const notasValidas = promediosParciales.filter((p) => p !== null) as number[];
     const promedioFinal = notasValidas.length > 0
-      ? parseFloat((notasValidas.reduce((s, n) => s + n, 0) / notasValidas.length).toFixed(2))
+      ? Number.parseFloat((notasValidas.reduce((s, n) => s + n, 0) / notasValidas.length).toFixed(2))
       : null;
 
     return this.prisma.promedioMateriaEstudiante.upsert({
@@ -102,7 +102,7 @@ export class PromediosService {
     }
 
     const sum = promediosMat.reduce((s, p) => s + (p.promedioFinalMateria ?? 0), 0);
-    const promedioGeneral = parseFloat((sum / promediosMat.length).toFixed(2));
+    const promedioGeneral = Number.parseFloat((sum / promediosMat.length).toFixed(2));
 
     let comportamiento = 'E';
     if (promedioGeneral >= 9) comportamiento = 'A';
@@ -154,5 +154,26 @@ export class PromediosService {
       orderBy: { promedioGeneral: 'desc' },
       include: { usuario: { omit: { contrasenaUsuario: true, tokenRecuperacion: true } } },
     });
+  }
+
+  // Recalcula promedios de TODOS los estudiantes matriculados en un curso+materia.
+  // Útil para sincronizar datos históricos o reconstruir la tabla desde cero.
+  async recalcularTodo(idCurso: number, idMateria: number) {
+    const curso = await this.prisma.curso.findUnique({
+      where: { idCurso },
+      include: { estudiantes: { select: { idUsuario: true } } },
+    });
+    if (!curso) throw new NotFoundException('Curso no encontrado');
+
+    const { idAnioLectivo } = curso;
+    const estudiantes = curso.estudiantes;
+
+    await Promise.allSettled(
+      estudiantes.map((e) =>
+        this.recalcularMateria(e.idUsuario, idCurso, idMateria, idAnioLectivo),
+      ),
+    );
+
+    return { recalculados: estudiantes.length };
   }
 }

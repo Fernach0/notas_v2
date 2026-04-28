@@ -1,10 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { evidenciasService } from '@/services/evidencias.service';
-import { actividadesService } from '@/services/actividades.service';
 import { useModal } from '@/hooks/useModal';
 import { useToast } from '@/hooks/useToast';
 import { Actividad } from '@/types';
@@ -13,8 +11,7 @@ import EvidenciaUploadForm from '@/components/forms/EvidenciaUploadForm';
 import ToastContainer from '@/components/ui/Toast';
 import Badge from '@/components/ui/Badge';
 import Spinner, { EmptyState } from '@/components/ui/Spinner';
-import { ArrowDownTrayIcon, DocumentArrowUpIcon } from '@heroicons/react/24/outline';
-import { useAuth } from '@/hooks/useAuth';
+import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 
 const fmt = (d: string) => new Date(d).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' });
 const isVencida = (fin: string) => new Date(fin) < new Date();
@@ -22,7 +19,6 @@ const isVencida = (fin: string) => new Date(fin) < new Date();
 export default function EvidenciasEstudiantePage() {
   const searchParams = useSearchParams();
   const idActividad = searchParams.get('idActividad') ? Number(searchParams.get('idActividad')) : null;
-  const { user } = useAuth();
   const qc = useQueryClient();
   const { toasts, show, remove } = useToast();
   const uploadModal = useModal<Actividad>();
@@ -82,10 +78,12 @@ export default function EvidenciasEstudiantePage() {
                   <td className="px-5 py-3.5">
                     <div className="flex justify-end">
                       {e.estado === 'ACTIVO' && (
-                        <a href={evidenciasService.getDownloadUrl(e.idEvidencia)} target="_blank" rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800">
+                        <button
+                          onClick={() => evidenciasService.descargar(e.idEvidencia)}
+                          className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
+                        >
                           <ArrowDownTrayIcon className="h-4 w-4" /> Descargar
-                        </a>
+                        </button>
                       )}
                     </div>
                   </td>

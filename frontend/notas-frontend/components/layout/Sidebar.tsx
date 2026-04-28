@@ -5,8 +5,7 @@ import { usePathname } from 'next/navigation';
 import { clsx } from 'clsx';
 import {
   HomeIcon, UsersIcon, AcademicCapIcon, BookOpenIcon,
-  CalendarDaysIcon, ClipboardDocumentListIcon, DocumentArrowUpIcon,
-  ChartBarIcon,
+  CalendarDaysIcon, ClipboardDocumentListIcon, ChartBarIcon,
 } from '@heroicons/react/24/outline';
 
 interface NavItem {
@@ -35,7 +34,7 @@ const estudianteNav: NavItem[] = [
   { label: 'Dashboard', href: '/estudiante', Icon: HomeIcon },
   { label: 'Mis Materias', href: '/estudiante/mis-materias', Icon: BookOpenIcon },
   { label: 'Actividades', href: '/estudiante/actividades', Icon: ClipboardDocumentListIcon },
-  { label: 'Evidencias', href: '/estudiante/evidencias', Icon: DocumentArrowUpIcon },
+  { label: 'Calificaciones', href: '/estudiante/calificaciones', Icon: ChartBarIcon },
 ];
 
 interface SidebarProps {

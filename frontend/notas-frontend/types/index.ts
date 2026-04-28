@@ -100,7 +100,7 @@ export interface Calificacion {
   idCalificacion: number;
   idUsuario: string;
   idActividad: number;
-  nota: number | null;
+  nota: number;
   comentario?: string;
   usuario?: {
     idUsuario: string;
@@ -138,11 +138,13 @@ export interface PromedioMateria {
   idAnioLectivo: number;
   idCurso: number;
   idMateria: number;
-  promedioParcial1?: number;
-  promedioParcial2?: number;
-  promedioParcial3?: number;
-  promedioFinalMateria?: number;
+  promedioParcial1?: number | null;
+  promedioParcial2?: number | null;
+  promedioParcial3?: number | null;
+  promedioFinalMateria?: number | null;
   fechaActualizacion?: string;
+  materia?: { idMateria: number; nombreMateria: string };
+  curso?: { idCurso: number; nombreCurso: string };
 }
 
 export interface PromedioGeneral {

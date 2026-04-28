@@ -14,7 +14,7 @@ import EvidenciaUploadForm from '@/components/forms/EvidenciaUploadForm';
 import ToastContainer from '@/components/ui/Toast';
 import Badge from '@/components/ui/Badge';
 import Spinner, { EmptyState } from '@/components/ui/Spinner';
-import { DocumentArrowUpIcon, AcademicCapIcon, BookOpenIcon } from '@heroicons/react/24/outline';
+import { DocumentArrowUpIcon, AcademicCapIcon, BookOpenIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 
 const fmt = (d: string) => new Date(d).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' });
 const isVencida = (fin: string) => new Date(fin) < new Date();
@@ -100,10 +100,11 @@ export default function ActividadesEstudiantePage() {
     enabled: !!miMatricula,
   });
 
-  // Set de idActividad con evidencia entregada (estado ACTIVO)
-  const submittedIds = new Set<number>(
-    misEvidencias?.filter((e) => e.estado === 'ACTIVO').map((e) => e.idActividad) ?? [],
+  // Map de idActividad → evidencia activa (para mostrar nombre y descarga)
+  const evidenciaMap = new Map(
+    misEvidencias?.filter((e) => e.estado === 'ACTIVO').map((e) => [e.idActividad, e]) ?? [],
   );
+  const submittedIds = new Set<number>(evidenciaMap.keys());
 
   const uploadMutation = useMutation({
     mutationFn: (fd: FormData) => evidenciasService.upload(fd),
@@ -218,7 +219,8 @@ export default function ActividadesEstudiantePage() {
               <tbody className="divide-y divide-slate-100">
                 {actividades.map((a) => {
                   const vencida = isVencida(a.fechaFinEntrega);
-                  const entregada = submittedIds.has(a.idActividad);
+                  const evidencia = evidenciaMap.get(a.idActividad);
+                  const entregada = !!evidencia;
                   return (
                     <tr key={a.idActividad} className="hover:bg-slate-50 transition">
                       <td className="px-5 py-3.5">
@@ -243,31 +245,36 @@ export default function ActividadesEstudiantePage() {
                         />
                       </td>
                       <td className="px-5 py-3.5">
-                        <div className="flex justify-end">
+                        <div className="flex flex-col items-end gap-1.5">
                           {entregada ? (
-                            // Ya entregó — botón para reemplazar
-                            <button
-                              onClick={() => uploadModal.open(a)}
-                              className="flex items-center gap-1.5 text-xs font-medium text-green-600 hover:text-green-800 transition"
-                              title="Reemplazar PDF entregado"
-                            >
-                              <DocumentArrowUpIcon className="h-4 w-4" />
-                              Reemplazar
-                            </button>
+                            <>
+                              <p className="text-xs text-slate-400 truncate max-w-[140px]" title={evidencia.nombreArchivo}>
+                                {evidencia.nombreArchivo}
+                              </p>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={async () => { const ok = await evidenciasService.descargar(evidencia.idEvidencia); if (!ok) show('No se pudo descargar el PDF', 'error'); }}
+                                  className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 transition"
+                                >
+                                  <ArrowDownTrayIcon className="h-3.5 w-3.5" /> Descargar
+                                </button>
+                                <button
+                                  onClick={() => uploadModal.open(a)}
+                                  className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-700 transition"
+                                  title="Reemplazar PDF entregado"
+                                >
+                                  <DocumentArrowUpIcon className="h-3.5 w-3.5" /> Reemplazar
+                                </button>
+                              </div>
+                            </>
                           ) : vencida ? (
-                            // Sin entregar y vencida — bloqueado
-                            <span className="text-xs text-slate-300 cursor-not-allowed">
-                              Plazo cerrado
-                            </span>
+                            <span className="text-xs text-slate-300 cursor-not-allowed">Plazo cerrado</span>
                           ) : (
-                            // Sin entregar, en plazo — botón activo
                             <button
                               onClick={() => uploadModal.open(a)}
                               className="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 transition"
-                              title="Subir evidencia PDF"
                             >
-                              <DocumentArrowUpIcon className="h-4 w-4" />
-                              Subir PDF
+                              <DocumentArrowUpIcon className="h-4 w-4" /> Subir PDF
                             </button>
                           )}
                         </div>

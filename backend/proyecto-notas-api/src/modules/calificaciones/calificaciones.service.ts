@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { PromediosService } from '../promedios/promedios.service';
 import { CreateCalificacionDto, BulkCalificacionDto } from './dto/create-calificacion.dto';
 
 @Injectable()
 export class CalificacionesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private promediosService: PromediosService,
+  ) {}
 
   private async validarNota(idActividad: number, nota: number) {
     const actividad = await this.prisma.actividad.findUnique({ where: { idActividad } });
@@ -16,13 +20,36 @@ export class CalificacionesService {
     }
   }
 
+  // Recalcula el promedio de materia para un estudiante tras guardar su nota.
+  // Falla silenciosamente para no bloquear la operación principal.
+  private async recalcular(idUsuario: string, idActividad: number): Promise<void> {
+    try {
+      const act = await this.prisma.actividad.findUnique({
+        where: { idActividad },
+        include: {
+          parcial: {
+            include: { curso: { select: { idAnioLectivo: true } } },
+          },
+        },
+      });
+      if (!act) return;
+      const { idCurso, idMateria } = act.parcial;
+      const { idAnioLectivo } = act.parcial.curso;
+      await this.promediosService.recalcularMateria(idUsuario, idCurso, idMateria, idAnioLectivo);
+    } catch {
+      // best-effort
+    }
+  }
+
   async create(dto: CreateCalificacionDto) {
     await this.validarNota(dto.idActividad, dto.nota);
-    return this.prisma.calificacion.upsert({
+    const result = await this.prisma.calificacion.upsert({
       where: { idUsuario_idActividad: { idUsuario: dto.idUsuario, idActividad: dto.idActividad } },
       update: { nota: dto.nota, comentario: dto.comentario },
       create: dto,
     });
+    await this.recalcular(dto.idUsuario, dto.idActividad);
+    return result;
   }
 
   async createBulk(dto: BulkCalificacionDto) {
@@ -31,7 +58,7 @@ export class CalificacionesService {
     });
     if (!actividad) throw new NotFoundException('Actividad no encontrada');
 
-    return Promise.all(
+    const results = await Promise.all(
       dto.calificaciones.map((c) => {
         if (c.nota > actividad.valorMaximo) {
           throw new BadRequestException(
@@ -47,6 +74,12 @@ export class CalificacionesService {
         });
       }),
     );
+
+    await Promise.allSettled(
+      dto.calificaciones.map((c) => this.recalcular(c.idUsuario, dto.idActividad)),
+    );
+
+    return results;
   }
 
   findByActividad(idActividad: number) {
@@ -67,6 +100,8 @@ export class CalificacionesService {
     const cal = await this.prisma.calificacion.findUnique({ where: { idCalificacion: id } });
     if (!cal) throw new NotFoundException('Calificación no encontrada');
     if (data.nota !== undefined) await this.validarNota(cal.idActividad, data.nota);
-    return this.prisma.calificacion.update({ where: { idCalificacion: id }, data });
+    const result = await this.prisma.calificacion.update({ where: { idCalificacion: id }, data });
+    await this.recalcular(cal.idUsuario, cal.idActividad);
+    return result;
   }
 }

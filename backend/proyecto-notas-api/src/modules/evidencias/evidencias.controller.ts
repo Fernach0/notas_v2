@@ -58,13 +58,18 @@ export class EvidenciasController {
     return this.service.findByUsuario(user.idUsuario, idActividad ? +idActividad : undefined);
   }
 
-  @Roles(1, 2)
+  @Roles(1, 2, 3)
   @Get(':id/descargar')
   async descargar(
     @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: { idUsuario: string; roles: number[] },
     @Res() res: Response,
   ) {
-    const { buffer, nombreArchivo, tipoContenido } = await this.service.getFileBuffer(id);
+    const soloEstudiante = user.roles.includes(3) && !user.roles.includes(1) && !user.roles.includes(2);
+    const { buffer, nombreArchivo, tipoContenido } = await this.service.getFileBuffer(
+      id,
+      soloEstudiante ? user.idUsuario : undefined,
+    );
     res.setHeader('Content-Type', tipoContenido);
     res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(nombreArchivo)}"`);
     res.setHeader('Content-Length', buffer.length);

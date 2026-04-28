@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery, useQueries } from '@tanstack/react-query';
+import { useQuery, useQueries, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cursosService } from '@/services/cursos.service';
 import { parcialesService } from '@/services/parciales.service';
 import { actividadesService } from '@/services/actividades.service';
@@ -10,7 +10,7 @@ import { promediosService } from '@/services/promedios.service';
 import { matriculasService, EstudianteMatriculado } from '@/services/matriculas.service';
 import { MiCurso } from '@/types';
 import Spinner, { EmptyState } from '@/components/ui/Spinner';
-import { ChartBarIcon, BookOpenIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { ChartBarIcon, BookOpenIcon, ArrowLeftIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const CARD_GRADIENTS = [
@@ -37,6 +37,7 @@ export default function CalificacionesProfesorPage() {
   const [idMateria, setIdMateria] = useState<number | null>(null);
   const [tab, setTab] = useState<Tab>('resumen');
   const [parcialActivo, setParcialActivo] = useState(1);
+  const qc = useQueryClient();
 
   const { data: cursos, isLoading: loadingCursos } = useQuery({
     queryKey: ['mis-cursos'],
@@ -62,6 +63,11 @@ export default function CalificacionesProfesorPage() {
     enabled: !!idCurso && !!materiaActiva,
   });
   const promedioMap = new Map(promedios?.map((p) => [p.idUsuario, p]) ?? []);
+
+  const recalcularTodo = useMutation({
+    mutationFn: () => promediosService.recalcularTodo({ idCurso: idCurso!, idMateria: materiaActiva! }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['promedios-cm', idCurso, materiaActiva] }),
+  });
 
   // Parciales para la vista "Por Actividad"
   const { data: parciales } = useQuery({
@@ -176,6 +182,20 @@ export default function CalificacionesProfesorPage() {
               </button>
             ))}
           </div>
+
+          {/* Botón recalcular — visible en tabs de promedios */}
+          {(tab === 'resumen' || tab === 'parciales') && (
+            <div className="flex justify-end mb-3">
+              <button
+                onClick={() => recalcularTodo.mutate()}
+                disabled={recalcularTodo.isPending || !idCurso || !materiaActiva}
+                className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-indigo-700 border border-slate-200 hover:border-indigo-300 rounded-lg px-3 py-1.5 transition disabled:opacity-50"
+              >
+                <ArrowPathIcon className={`h-3.5 w-3.5 ${recalcularTodo.isPending ? 'animate-spin' : ''}`} />
+                {recalcularTodo.isPending ? 'Calculando...' : 'Recalcular promedios'}
+              </button>
+            </div>
+          )}
 
           {/* ── TAB: Promedio Final ─────────────────────────────────────── */}
           {tab === 'resumen' && (
