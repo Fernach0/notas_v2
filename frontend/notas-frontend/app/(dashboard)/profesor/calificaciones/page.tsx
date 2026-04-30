@@ -10,7 +10,7 @@ import { promediosService } from '@/services/promedios.service';
 import { matriculasService, EstudianteMatriculado } from '@/services/matriculas.service';
 import { MiCurso } from '@/types';
 import Spinner, { EmptyState } from '@/components/ui/Spinner';
-import { ChartBarIcon, BookOpenIcon, ArrowLeftIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { ChartBarIcon, BookOpenIcon, ArrowLeftIcon, ArrowPathIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const CARD_GRADIENTS = [
@@ -100,6 +100,15 @@ export default function CalificacionesProfesorPage() {
 
   return (
     <>
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          .print-zone, .print-zone * { visibility: visible; }
+          .print-zone { position: absolute; left: 0; top: 0; width: 100%; padding: 24px; }
+          .no-print { display: none !important; }
+        }
+      `}</style>
+
       {/* Header */}
       <div className="mb-6 flex items-center gap-3">
         <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-600 shadow shrink-0">
@@ -114,12 +123,20 @@ export default function CalificacionesProfesorPage() {
           </p>
         </div>
         {cursoSel && (
-          <button
-            onClick={() => { setCursoSel(null); setIdMateria(null); setTab('resumen'); }}
-            className="ml-auto flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition"
-          >
-            <ArrowLeftIcon className="h-4 w-4" /> Cambiar curso
-          </button>
+          <div className="no-print ml-auto flex items-center gap-3">
+            <button
+              onClick={() => { setCursoSel(null); setIdMateria(null); setTab('resumen'); }}
+              className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition"
+            >
+              <ArrowLeftIcon className="h-4 w-4" /> Cambiar curso
+            </button>
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 border border-slate-300 hover:border-slate-400 rounded-lg px-3 py-2 transition"
+            >
+              <ArrowDownTrayIcon className="h-4 w-4" /> Descargar PDF
+            </button>
+          </div>
         )}
       </div>
 
@@ -185,7 +202,7 @@ export default function CalificacionesProfesorPage() {
 
           {/* Botón recalcular — visible en tabs de promedios */}
           {(tab === 'resumen' || tab === 'parciales') && (
-            <div className="flex justify-end mb-3">
+            <div className="no-print flex justify-end mb-3">
               <button
                 onClick={() => recalcularTodo.mutate()}
                 disabled={recalcularTodo.isPending || !idCurso || !materiaActiva}
@@ -200,7 +217,7 @@ export default function CalificacionesProfesorPage() {
           {/* ── TAB: Promedio Final ─────────────────────────────────────── */}
           {tab === 'resumen' && (
             loadingPromedios ? <Spinner /> : (
-              <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto">
+              <div className="print-zone bg-white rounded-xl border border-slate-200 overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-slate-50 border-b border-slate-200">
                     <tr>
@@ -245,7 +262,7 @@ export default function CalificacionesProfesorPage() {
           {/* ── TAB: Por Parciales ──────────────────────────────────────── */}
           {tab === 'parciales' && (
             loadingPromedios ? <Spinner /> : (
-              <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto">
+              <div className="print-zone bg-white rounded-xl border border-slate-200 overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-slate-50 border-b border-slate-200">
                     <tr>
@@ -285,7 +302,7 @@ export default function CalificacionesProfesorPage() {
           {/* ── TAB: Por Actividad (solo lectura) ───────────────────────── */}
           {tab === 'actividades' && (
             <>
-              <div className="flex gap-1 mb-5 bg-slate-100 p-1 rounded-lg w-fit">
+              <div className="no-print flex gap-1 mb-5 bg-slate-100 p-1 rounded-lg w-fit">
                 {[1, 2, 3].map((n) => (
                   <button key={n} onClick={() => setParcialActivo(n)}
                     className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${parcialActivo === n ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
@@ -303,7 +320,7 @@ export default function CalificacionesProfesorPage() {
               ) : !actividades?.length ? (
                 <EmptyState message="No hay actividades en este parcial" />
               ) : (
-                <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto">
+                <div className="print-zone bg-white rounded-xl border border-slate-200 overflow-x-auto">
                   <table className="text-sm" style={{ minWidth: `${220 + actividades.length * 120}px` }}>
                     <thead className="bg-slate-50 border-b border-slate-200">
                       <tr>

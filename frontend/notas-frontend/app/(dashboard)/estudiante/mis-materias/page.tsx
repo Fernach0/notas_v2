@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { matriculasService } from '@/services/matriculas.service';
 import { promediosService } from '@/services/promedios.service';
 import Spinner, { EmptyState } from '@/components/ui/Spinner';
-import { BookOpenIcon, AcademicCapIcon } from '@heroicons/react/24/outline';
+import { BookOpenIcon, AcademicCapIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import { PromedioMateria } from '@/types';
 
 const scoreColor = (val?: number | null) => {
@@ -55,6 +55,15 @@ export default function MisMateriasPage() {
 
   return (
     <>
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          .print-zone, .print-zone * { visibility: visible; }
+          .print-zone { position: absolute; left: 0; top: 0; width: 100%; padding: 24px; }
+          .no-print { display: none !important; }
+        }
+      `}</style>
+
       <div className="mb-6 flex items-center gap-3">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600">
           <AcademicCapIcon className="h-5 w-5 text-white" />
@@ -67,12 +76,18 @@ export default function MisMateriasPage() {
             {miMatricula.curso.anioLectivo.fechaFinal.slice(0, 4)}
           </p>
         </div>
+        <button
+          onClick={() => window.print()}
+          className="no-print ml-auto flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 border border-slate-300 hover:border-slate-400 rounded-lg px-3 py-2 transition"
+        >
+          <ArrowDownTrayIcon className="h-4 w-4" /> Descargar PDF
+        </button>
       </div>
 
       {materias.length === 0 ? (
         <EmptyState message="El curso no tiene materias asignadas aún" />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="print-zone grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {materias.map((m) => {
             const p = promedioMap.get(m.idMateria);
             const parciales = [
