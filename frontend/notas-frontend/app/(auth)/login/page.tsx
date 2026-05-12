@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -85,9 +86,17 @@ export default function LoginPage() {
 
             {/* Contraseña */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Contraseña
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-sm font-medium text-slate-700">
+                  Contraseña
+                </label>
+                <Link
+                  href="/forgot-password"
+                  className="text-xs text-blue-600 hover:text-blue-800 transition"
+                >
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
               <input
                 {...register('password')}
                 type="password"

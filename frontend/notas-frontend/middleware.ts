@@ -5,9 +5,10 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
   const session = req.auth;
 
-  // Permitir la página de login sin sesión
-  if (pathname === '/login') {
-    if (session) {
+  // Rutas públicas — accesibles sin sesión
+  const publicRoutes = ['/login', '/forgot-password', '/reset-password'];
+  if (publicRoutes.includes(pathname)) {
+    if (session && pathname === '/login') {
       return NextResponse.redirect(new URL(getRoleHome(session.user.roles), req.url));
     }
     return NextResponse.next();

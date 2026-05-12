@@ -8,7 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
-import * as nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { PrismaService } from '../../prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
@@ -51,7 +51,8 @@ export class AuthService {
     const usuario = await this.prisma.usuario.findFirst({
       where: { email: dto.email },
     });
-    if (!usuario) throw new NotFoundException('No existe usuario con ese email');
+    // Respuesta genérica para no revelar si el email existe
+    if (!usuario) return { message: 'Si el correo existe, recibirás un enlace de recuperación.' };
 
     const token = crypto.randomUUID();
     const expiracion = new Date(Date.now() + 1000 * 60 * 60); // 1 hora
@@ -61,24 +62,53 @@ export class AuthService {
       data: { tokenRecuperacion: token, expiracionToken: expiracion },
     });
 
-    // Envío de email (configurar credenciales SMTP en .env para producción)
-    const transporter = nodemailer.createTransport({
-      host: this.config.get('SMTP_HOST') || 'smtp.ethereal.email',
-      port: Number(this.config.get('SMTP_PORT') || 587),
-      auth: {
-        user: this.config.get('SMTP_USER'),
-        pass: this.config.get('SMTP_PASS'),
-      },
-    });
+    const frontendUrl = this.config.get<string>('FRONTEND_URL', 'http://localhost:3001');
+    const resetLink = `${frontendUrl}/reset-password?token=${token}`;
+    const nombre = usuario.nombreCompleto.split(' ')[0];
 
-    await transporter.sendMail({
-      from: '"Notas Escuela" <no-reply@notas.edu.ec>',
+    const resend = new Resend(this.config.get<string>('RESEND_API_KEY'));
+    await resend.emails.send({
+      from: 'Proyecto Notas <onboarding@resend.dev>',
       to: usuario.email!,
-      subject: 'Recuperación de contraseña',
-      text: `Tu token de recuperación es: ${token}\nVálido por 1 hora.`,
+      subject: 'Recupera tu contraseña — Proyecto Notas',
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px;background:#f8fafc;border-radius:12px;">
+          <div style="text-align:center;margin-bottom:24px;">
+            <div style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;background:#2563eb;border-radius:14px;">
+              <span style="font-size:28px;">📋</span>
+            </div>
+            <h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:12px 0 4px;">Proyecto Notas</h1>
+            <p style="color:#64748b;font-size:13px;margin:0;">Sistema de gestión académica</p>
+          </div>
+
+          <div style="background:#fff;border-radius:10px;padding:28px;border:1px solid #e2e8f0;">
+            <p style="color:#334155;font-size:15px;margin:0 0 8px;">Hola <strong>${nombre}</strong>,</p>
+            <p style="color:#334155;font-size:15px;margin:0 0 24px;">
+              Recibimos una solicitud para restablecer la contraseña de tu cuenta.
+              Haz clic en el botón de abajo para crear una nueva contraseña.
+            </p>
+
+            <div style="text-align:center;margin:28px 0;">
+              <a href="${resetLink}"
+                style="background:#2563eb;color:#fff;text-decoration:none;padding:13px 32px;border-radius:8px;font-size:15px;font-weight:600;display:inline-block;">
+                Restablecer contraseña
+              </a>
+            </div>
+
+            <p style="color:#64748b;font-size:13px;margin:24px 0 0;">
+              Este enlace es válido por <strong>1 hora</strong>.
+              Si no solicitaste esto, ignora este correo y tu contraseña permanecerá sin cambios.
+            </p>
+          </div>
+
+          <p style="text-align:center;color:#94a3b8;font-size:12px;margin-top:20px;">
+            © ${new Date().getFullYear()} Proyecto Notas — Sistema Académico
+          </p>
+        </div>
+      `,
     });
 
-    return { message: 'Se envió un email con el token de recuperación' };
+    return { message: 'Si el correo existe, recibirás un enlace de recuperación.' };
   }
 
   async resetPassword(dto: ResetPasswordDto) {

@@ -1,13 +1,26 @@
 # Seed — Usuarios de Prueba
-**Fecha:** 2026-04-19  
-**Insertados por:** Claude (sesión de desarrollo)  
 **Base de datos:** `notas_escuela` · `localhost:5432`  
-**Contraseña de todos los usuarios:** `Notas2026!`  
-**Hash bcrypt (rounds=10):** `$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK`
+**Contraseña de todos los usuarios:** `Notas2026!`
+
+---
+
+## Administradores — Rol 1 (3 usuarios)
+
+**Insertados:** 2026-05-12  
+**Hash bcrypt (rounds=10):** `$2b$10$0ZmmtAM87Q9nEPlkmIibBuli0uSvWqp32aOuYVmnKMpDUART/C4Bu`
+
+| Cédula     | Nombre completo              | Email                   |
+|------------|------------------------------|-------------------------|
+| 1700000001 | Administrador del Sistema    | admin@escuela.ec        |
+| 1700000002 | Directora Académica Pérez    | directora@escuela.ec    |
+| 1700000003 | Secretaria General Morales   | secretaria@escuela.ec   |
 
 ---
 
 ## Profesores — Rol 2 (10 usuarios)
+
+**Insertados:** 2026-04-19  
+**Hash bcrypt (rounds=10):** `$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK`
 
 | Cédula      | Nombre completo               | Email                    |
 |-------------|-------------------------------|--------------------------|
