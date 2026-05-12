@@ -1,5 +1,5 @@
 # Análisis de Puntos de Función — Sistema de Gestión de Notas
-### Liceo La Siembra
+### Plataforma para Instituciones Educativas
 
 > **Sistema:** Gestión de Notas
 > **Stack tecnológico:** Next.js · NestJS · PostgreSQL · Prisma ORM
@@ -61,4 +61,4 @@ El presente análisis de Puntos de Función evidencia que el módulo de **Califi
 
 ---
 
-*Sistema de Gestión de Notas — Liceo La Siembra · Análisis IFPUG v1.0*
+*Sistema de Gestión de Notas — Plataforma para Instituciones Educativas · Análisis IFPUG v1.0*

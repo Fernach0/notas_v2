@@ -209,7 +209,7 @@ Ver Calificaciones                                        Descargar PDF notas
 | Chat o mensajería interna entre usuarios | ❌ No disponible |
 | Generación de certificados o diplomas | ❌ No disponible |
 | Gestión de pagos o pensiones | ❌ No disponible |
-| Múltiples instituciones educativas | ❌ No disponible (una sola institución) |
+| Múltiples instituciones simultáneas | ❌ Una instalación por institución (puede desplegarse en cualquier plantel educativo) |
 | Aplicación móvil nativa | ❌ Solo web |
 | Adjuntar archivos que no sean PDF | ❌ Solo se aceptan PDF (máx. 10 MB) |
 | Calificar con escala distinta a 0–10 | ❌ La escala es fija sobre 10 |

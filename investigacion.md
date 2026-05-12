@@ -7,7 +7,7 @@
 ## Objetivos
 
 ### Objetivo General
-Analizar y documentar las técnicas de Historias de Usuario y Puntos de Función (IFPUG) como herramientas complementarias para la especificación de requisitos y la estimación del tamaño funcional en proyectos de software ágiles, aplicadas al sistema web de Gestión de Notas del Liceo La Siembra.
+Analizar y documentar las técnicas de Historias de Usuario y Puntos de Función (IFPUG) como herramientas complementarias para la especificación de requisitos y la estimación del tamaño funcional en proyectos de software ágiles, aplicadas al sistema web de Gestión de Notas, una plataforma genérica diseñada para cualquier institución educativa de nivel básico y bachillerato.
 
 ### Objetivos Específicos
 1. Describir el origen, características y componentes de las Historias de Usuario dentro del marco de las metodologías ágiles.
@@ -385,7 +385,7 @@ Las Historias de Usuario y los Puntos de Función son técnicas complementarias:
 
 ## 5. Aplicación Práctica: Caso de Estudio
 
-### Sistema: Gestión de Notas — Liceo La Siembra
+### Sistema: Gestión de Notas — Plataforma para Instituciones Educativas
 **Stack:** Next.js · NestJS · PostgreSQL · Prisma ORM
 
 **Período de desarrollo:** 6 de abril al 5 de mayo de 2026 (29 días)

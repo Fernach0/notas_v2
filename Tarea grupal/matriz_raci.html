@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Matriz RACI — Sistema Gestión de Notas</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 11px;
+      background: #f0f0f0;
+      padding: 20px;
+      color: #333;
+    }
+
+    /* ── Encabezado ─────────────────────────────────── */
+    .titulo {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #1a1a2e;
+      margin-bottom: 16px;
+    }
+
+    /* ── Leyenda ─────────────────────────────────────── */
+    .leyenda-wrapper {
+      display: flex;
+      gap: 32px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .leyenda-bloque h4 {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+      color: #555;
+    }
+    .leyenda-items { display: flex; flex-direction: column; gap: 4px; }
+    .leyenda-item { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+    .badge-raci {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 11px; color: #fff;
+      flex-shrink: 0;
+    }
+    .badge-pri {
+      width: 52px; height: 20px; border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 10px; color: #fff;
+    }
+    .badge-est {
+      padding: 2px 8px; border-radius: 4px;
+      font-weight: 600; font-size: 10px;
+    }
+
+    /* ── Colores RACI ────────────────────────────────── */
+    .r  { background: #9B59B6; }
+    .a  { background: #E74C3C; }
+    .c  { background: #1ABC9C; }
+    .i  { background: #E67E22; }
+
+    /* ── Prioridad ───────────────────────────────────── */
+    .pri-baja  { background: #1ABC9C; }
+    .pri-media { background: #E67E22; }
+    .pri-alta  { background: #E74C3C; }
+
+    /* ── Estado ─────────────────────────────────────── */
+    .est-completo   { background: #27AE60; color: #fff; }
+    .est-curso      { background: #5DADE2; color: #fff; }
+    .est-aprobado   { background: #2E86C1; color: #fff; }
+    .est-revision   { background: #F39C12; color: #fff; }
+    .est-atrasado   { background: #F1C40F; color: #333; }
+    .est-espera     { background: #BDC3C7; color: #333; }
+    .est-noiniciado { background: #95A5A6; color: #fff; }
+
+    /* ── Tabla principal ─────────────────────────────── */
+    .tabla-wrapper {
+      overflow-x: auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+    }
+
+    table {
+      border-collapse: collapse;
+      min-width: 900px;
+      width: 100%;
+    }
+
+    /* ── Grupo de roles (fila 1 del thead) ──────────── */
+    .grupo-header {
+      background: #f8f8f8;
+      text-align: center;
+      font-weight: 700;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #555;
+      border: 1px solid #ddd;
+      padding: 6px 4px;
+    }
+    .grupo-liderazgo   { background: #fde8d8; color: #a0440e; }
+    .grupo-equipo      { background: #dce8fb; color: #1a4a8a; }
+    .grupo-usuarios    { background: #d8f5ec; color: #0a5d3f; }
+
+    /* ── Encabezados de rol (diagonal) ──────────────── */
+    .col-meta {
+      min-width: 70px;
+      background: #f8f8f8;
+      border: 1px solid #ddd;
+    }
+    .col-meta-act { min-width: 220px; max-width: 260px; }
+
+    th.rol-header {
+      height: 110px;
+      min-width: 36px;
+      max-width: 42px;
+      vertical-align: bottom;
+      padding: 0 4px 4px 4px;
+      border: 1px solid #ddd;
+      background: #f8f8f8;
+    }
+    th.rol-header .rotado {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      white-space: nowrap;
+      font-size: 10px;
+      font-weight: 600;
+      color: #444;
+      display: block;
+      height: 100px;
+      text-align: left;
+    }
+
+    /* ── Fila de fase ────────────────────────────────── */
+    .fase-row td {
+      background: #3d3d3d;
+      color: #fff;
+      font-weight: 700;
+      font-size: 11px;
+      padding: 8px 12px;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Filas de datos ──────────────────────────────── */
+    tbody tr:not(.fase-row):hover { background: #f5f8ff; }
+
+    td {
+      border: 1px solid #ddd;
+      padding: 5px 6px;
+      vertical-align: middle;
+    }
+
+    .td-prioridad { text-align: center; }
+    .td-estado    { text-align: center; white-space: nowrap; }
+    .td-actividad {
+      font-size: 11px;
+      color: #333;
+      min-width: 220px;
+      max-width: 260px;
+    }
+
+    /* ── Celda RACI ──────────────────────────────────── */
+    .td-raci {
+      text-align: center;
+      vertical-align: middle;
+    }
+    .celda-raci {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center; justify-content: center;
+      font-weight: 800; font-size: 11px; color: #fff;
+      margin: auto;
+    }
+
+    /* ── Fila vacía separadora ───────────────────────── */
+    .sep-row td { background: #fafafa; height: 6px; border: none; }
+
+    @media print {
+      body { padding: 0; background: #fff; }
+      .tabla-wrapper { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="titulo">Matriz RACI — Sistema Gestión de Notas</div>
+  <p style="margin-bottom:14px;color:#666;font-size:11px;">
+    Plataforma para Instituciones Educativas &nbsp;|&nbsp; Desarrollador: Luis Cueva &nbsp;|&nbsp; NRC 30744 &nbsp;|&nbsp; Período: 06 abr – 05 may 2026
+  </p>
+
+  <!-- ── LEYENDA ──────────────────────────────────────────── -->
+  <div class="leyenda-wrapper">
+
+    <div class="leyenda-bloque">
+      <h4>Clave RACI</h4>
+      <div class="leyenda-items">
+        <div class="leyenda-item"><div class="badge-raci r">R</div> Responsable — ejecuta la tarea</div>
+        <div class="leyenda-item"><div class="badge-raci a">A</div> A cargo — rinde cuentas del resultado</div>
+        <div class="leyenda-item"><div class="badge-raci c">C</div> Consultado — aporta información o criterio</div>
+        <div class="leyenda-item"><div class="badge-raci i">I</div> Informado — recibe actualizaciones del avance</div>
+      </div>
+    </div>
+
+    <div class="leyenda-bloque">
+      <h4>Prioridad</h4>
+      <div class="leyenda-items">
+        <div class="leyenda-item"><div class="badge-pri pri-baja">Baja</div></div>
+        <div class="leyenda-item"><div class="badge-pri pri-media">Media</div></div>
+        <div class="leyenda-item"><div class="badge-pri pri-alta">Alta</div></div>
+      </div>
+    </div>
+
+    <div class="leyenda-bloque">
+      <h4>Estado</h4>
+      <div class="leyenda-items">
+        <div class="leyenda-item"><span class="badge-est est-noiniciado">No se ha iniciado</span></div>
+        <div class="leyenda-item"><span class="badge-est est-curso">En curso</span></div>
+        <div class="leyenda-item"><span class="badge-est est-completo">Completo</span></div>
+        <div class="leyenda-item"><span class="badge-est est-revision">Necesita revisión</span></div>
+        <div class="leyenda-item"><span class="badge-est est-aprobado">Aprobado</span></div>
+        <div class="leyenda-item"><span class="badge-est est-atrasado">Atrasado</span></div>
+        <div class="leyenda-item"><span class="badge-est est-espera">En espera</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── TABLA RACI ───────────────────────────────────────── -->
+  <div class="tabla-wrapper">
+  <table>
+    <thead>
+      <!-- FILA 1: grupos de roles -->
+      <tr>
+        <th class="grupo-header col-meta" style="min-width:60px">Prioridad</th>
+        <th class="grupo-header col-meta" style="min-width:90px">Estado</th>
+        <th class="grupo-header col-meta col-meta-act">Actividad del Proyecto</th>
+        <th class="grupo-header grupo-liderazgo" colspan="2">Liderazgo del Proyecto</th>
+        <th class="grupo-header grupo-equipo" colspan="4">Equipo Técnico</th>
+        <th class="grupo-header grupo-usuarios" colspan="3">Usuarios Finales</th>
+      </tr>
+      <!-- FILA 2: nombres de roles (diagonal) -->
+      <tr>
+        <th class="col-meta"></th>
+        <th class="col-meta"></th>
+        <th class="col-meta col-meta-act"></th>
+        <!-- Liderazgo -->
+        <th class="rol-header"><span class="rotado">Docente Tutor</span></th>
+        <th class="rol-header"><span class="rotado">Luis Cueva (Líder)</span></th>
+        <!-- Equipo Técnico -->
+        <th class="rol-header"><span class="rotado">Dev. Backend</span></th>
+        <th class="rol-header"><span class="rotado">Dev. Frontend</span></th>
+        <th class="rol-header"><span class="rotado">Arquitecto / DBA</span></th>
+        <th class="rol-header"><span class="rotado">QA / Tester</span></th>
+        <!-- Usuarios -->
+        <th class="rol-header"><span class="rotado">Administrador</span></th>
+        <th class="rol-header"><span class="rotado">Profesor</span></th>
+        <th class="rol-header"><span class="rotado">Estudiante</span></th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <!-- ═══════════════════════════════════════════════════ -->
+      <!-- FASE 1: Análisis y Requisitos                      -->
+      <!-- ═══════════════════════════════════════════════════ -->
+      <tr class="fase-row">
+        <td colspan="12">FASE 1: Análisis y Requisitos</td>
+      </tr>
+
+      <tr>
+        <td class="td-prioridad"><div class="badge-pri pri-baja" style="margin:auto">Baja</div></td>
+        <td class="td-estado"><span class="badge-est est-aprobado">Aprobado</span></td>
+        <td class="td-actividad">Reunión inicial con stakeholders de la institución educativa</td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci a">A</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+      </tr>
+
+      <tr>
+        <td class="td-prioridad"><div class="badge-pri pri-media" style="margin:auto">Media</div></td>
+        <td class="td-estado"><span class="badge-est est-aprobado">Aprobado</span></td>
+        <td class="td-actividad">Identificar requisitos funcionales del sistema</td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci a">A</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+      </tr>
+
+      <tr>
+        <td class="td-prioridad"><div class="badge-pri pri-alta" style="margin:auto">Alta</div></td>
+        <td class="td-estado"><span class="badge-est est-aprobado">Aprobado</span></td>
+        <td class="td-actividad">Documentar Historias de Usuario y Puntos de Función</td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci a">A</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+      </tr>
+
+      <tr>
+        <td class="td-prioridad"><div class="badge-pri pri-media" style="margin:auto">Media</div></td>
+        <td class="td-estado"><span class="badge-est est-aprobado">Aprobado</span></td>
+        <td class="td-actividad">Validar requisitos con usuarios finales</td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci a">A</div></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+      </tr>
+
+      <!-- ═══════════════════════════════════════════════════ -->
+      <!-- FASE 2: Diseño                                     -->
+      <!-- ═══════════════════════════════════════════════════ -->
+      <tr class="fase-row">
+        <td colspan="12">FASE 2: Diseño del Sistema</td>
+      </tr>
+
+      <tr>
+        <td class="td-prioridad"><div class="badge-pri pri-alta" style="margin:auto">Alta</div></td>
+        <td class="td-estado"><span class="badge-est est-completo">Completo</span></td>
+        <td class="td-actividad">Diseño del esquema de base de datos (Prisma / PostgreSQL)</td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci a">A</div></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"></td>
+      </tr>
+
+      <tr>
+        <td class="td-prioridad"><div class="badge-pri pri-alta" style="margin:auto">Alta</div></td>
+        <td class="td-estado"><span class="badge-est est-completo">Completo</span></td>
+        <td class="td-actividad">Diseño de arquitectura del sistema (NestJS + Next.js)</td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci a">A</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"></td>
+      </tr>
+
+      <tr>
+        <td class="td-prioridad"><div class="badge-pri pri-media" style="margin:auto">Media</div></td>
+        <td class="td-estado"><span class="badge-est est-completo">Completo</span></td>
+        <td class="td-actividad">Diseño de interfaces de usuario (UI/UX — Tailwind CSS)</td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci a">A</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+      </tr>
+
+      <tr>
+        <td class="td-prioridad"><div class="badge-pri pri-media" style="margin:auto">Media</div></td>
+        <td class="td-estado"><span class="badge-est est-aprobado">Aprobado</span></td>
+        <td class="td-actividad">Revisión y aprobación del diseño técnico</td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci a">A</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"></td>
+      </tr>
+
+      <!-- ═══════════════════════════════════════════════════ -->
+      <!-- FASE 3: Desarrollo                                 -->
+      <!-- ═══════════════════════════════════════════════════ -->
+      <tr class="fase-row">
+        <td colspan="12">FASE 3: Desarrollo (Sprints 1 – 6)</td>
+      </tr>
+
+      <tr>
+        <td class="td-prioridad"><div class="badge-pri pri-alta" style="margin:auto">Alta</div></td>
+        <td class="td-estado"><span class="badge-est est-completo">Completo</span></td>
+        <td class="td-actividad">Sprint 1 — Autenticación JWT y Gestión de Usuarios (CRUD + roles)</td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci a">A</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"></td>
+      </tr>
+
+      <tr>
+        <td class="td-prioridad"><div class="badge-pri pri-alta" style="margin:auto">Alta</div></td>
+        <td class="td-estado"><span class="badge-est est-completo">Completo</span></td>
+        <td class="td-actividad">Sprint 2 — Años Lectivos, Cursos y Materias (Configuración Académica)</td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci a">A</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"></td>
+      </tr>
+
+      <tr>
+        <td class="td-prioridad"><div class="badge-pri pri-alta" style="margin:auto">Alta</div></td>
+        <td class="td-estado"><span class="badge-est est-completo">Completo</span></td>
+        <td class="td-actividad">Sprint 3 — Matrículas, Traslados y Dashboard por rol</td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci a">A</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"></td>
+      </tr>
+
+      <tr>
+        <td class="td-prioridad"><div class="badge-pri pri-alta" style="margin:auto">Alta</div></td>
+        <td class="td-estado"><span class="badge-est est-completo">Completo</span></td>
+        <td class="td-actividad">Sprint 4 — Actividades por Parcial y Evidencias PDF</td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci a">A</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+      </tr>
+
+      <tr>
+        <td class="td-prioridad"><div class="badge-pri pri-alta" style="margin:auto">Alta</div></td>
+        <td class="td-estado"><span class="badge-est est-completo">Completo</span></td>
+        <td class="td-actividad">Sprint 5 — Calificaciones ponderadas y Promedios automáticos</td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci a">A</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+      </tr>
+
+      <tr>
+        <td class="td-prioridad"><div class="badge-pri pri-media" style="margin:auto">Media</div></td>
+        <td class="td-estado"><span class="badge-est est-completo">Completo</span></td>
+        <td class="td-actividad">Sprint 6 — Reportes PDF y descarga de boletines de notas</td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci a">A</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+      </tr>
+
+      <!-- ═══════════════════════════════════════════════════ -->
+      <!-- FASE 4: Pruebas                                    -->
+      <!-- ═══════════════════════════════════════════════════ -->
+      <tr class="fase-row">
+        <td colspan="12">FASE 4: Pruebas</td>
+      </tr>
+
+      <tr>
+        <td class="td-prioridad"><div class="badge-pri pri-alta" style="margin:auto">Alta</div></td>
+        <td class="td-estado"><span class="badge-est est-completo">Completo</span></td>
+        <td class="td-actividad">Pruebas unitarias del backend (endpoints NestJS)</td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci a">A</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"></td>
+      </tr>
+
+      <tr>
+        <td class="td-prioridad"><div class="badge-pri pri-alta" style="margin:auto">Alta</div></td>
+        <td class="td-estado"><span class="badge-est est-completo">Completo</span></td>
+        <td class="td-actividad">Pruebas de integración (API + Base de datos)</td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci a">A</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"></td>
+      </tr>
+
+      <tr>
+        <td class="td-prioridad"><div class="badge-pri pri-alta" style="margin:auto">Alta</div></td>
+        <td class="td-estado"><span class="badge-est est-completo">Completo</span></td>
+        <td class="td-actividad">Pruebas de aceptación con los 3 roles (Admin / Profesor / Estudiante)</td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci a">A</div></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+      </tr>
+
+      <tr>
+        <td class="td-prioridad"><div class="badge-pri pri-media" style="margin:auto">Media</div></td>
+        <td class="td-estado"><span class="badge-est est-completo">Completo</span></td>
+        <td class="td-actividad">Corrección de bugs y ajustes finales del sistema</td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci a">A</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"></td>
+      </tr>
+
+      <!-- ═══════════════════════════════════════════════════ -->
+      <!-- FASE 5: Implementación y Cierre                   -->
+      <!-- ═══════════════════════════════════════════════════ -->
+      <tr class="fase-row">
+        <td colspan="12">FASE 5: Implementación y Cierre</td>
+      </tr>
+
+      <tr>
+        <td class="td-prioridad"><div class="badge-pri pri-alta" style="margin:auto">Alta</div></td>
+        <td class="td-estado"><span class="badge-est est-completo">Completo</span></td>
+        <td class="td-actividad">Entrega final del sistema a la institución educativa</td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci a">A</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+      </tr>
+
+      <tr>
+        <td class="td-prioridad"><div class="badge-pri pri-media" style="margin:auto">Media</div></td>
+        <td class="td-estado"><span class="badge-est est-completo">Completo</span></td>
+        <td class="td-actividad">Capacitación a usuarios del sistema (3 roles)</td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci a">A</div></td>
+        <td class="td-raci"><div class="celda-raci a">A</div></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+      </tr>
+
+      <tr>
+        <td class="td-prioridad"><div class="badge-pri pri-baja" style="margin:auto">Baja</div></td>
+        <td class="td-estado"><span class="badge-est est-completo">Completo</span></td>
+        <td class="td-actividad">Redacción y entrega de documentación técnica (Manual de Usuario)</td>
+        <td class="td-raci"><div class="celda-raci r">R</div></td>
+        <td class="td-raci"><div class="celda-raci a">A</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci c">C</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+        <td class="td-raci"><div class="celda-raci i">I</div></td>
+      </tr>
+
+    </tbody>
+  </table>
+  </div>
+
+  <p style="margin-top:14px;color:#888;font-size:10px;text-align:right;">
+    Sistema Gestión de Notas — Plataforma para Instituciones Educativas &nbsp;|&nbsp; ESPE NRC 30744 &nbsp;|&nbsp; Luis Cueva &nbsp;|&nbsp; Mayo 2026
+  </p>
+
+</body>
+</html>
