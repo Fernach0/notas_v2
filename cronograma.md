@@ -16,7 +16,7 @@
 
 ---
 
-### Paso 2 — Crear el proyecto
+### Paso 2 — Crear el proyecto xd
 
 1. Haz clic en **"Create project"** (botón azul, arriba a la izquierda).
 2. Selecciona la plantilla **"Scrum"** y haz clic en **"Select"**.
