@@ -392,12 +392,17 @@ Render despliega desde un repositorio de GitHub. Si el backend no está en GitHu
    | Campo | Valor |
    |-------|-------|
    | **Name** | `proyecto-notas-api` |
-   | **Region** | Oregon (US West) o el más cercano disponible |
+   | **Region** | Oregon (US West) |
    | **Branch** | `main` |
    | **Runtime** | `Node` |
-   | **Build Command** | `npm install && npm run build` |
-   | **Start Command** | `node dist/main` |
+   | **Root Directory** | `backend/proyecto-notas-api` |
+   | **Build Command** | `npm install && npx prisma generate && npm run build` |
+   | **Start Command** | `npm run start:prod` |
    | **Instance Type** | Free |
+
+   > **Importante si subiste un monorepo (backend + frontend en el mismo repo):**
+   > El campo **Root Directory** es crítico. Render busca el `package.json` desde esa carpeta.
+   > Si se deja en `backend` en lugar de `backend/proyecto-notas-api`, el build fallará porque no encontrará el `package.json` de NestJS.
 
 6. **No hagas clic en "Deploy" todavía** — primero agrega las variables de entorno.
 
