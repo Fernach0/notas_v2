@@ -50,6 +50,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.roles = (user as any).roles;
         token.nombreCompleto = (user as any).nombreCompleto;
       }
+
+      // Si el JWT del backend expiró, invalidar la sesión de NextAuth
+      if (token.accessToken) {
+        try {
+          const [, payload] = (token.accessToken as string).split('.');
+          const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+          const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+          const { exp } = JSON.parse(atob(padded));
+          if (exp && Date.now() > exp * 1000) {
+            return null;
+          }
+        } catch {
+          // No se puede decodificar el token — mantener sesión activa
+        }
+      }
+
       return token;
     },
     session({ session, token }) {

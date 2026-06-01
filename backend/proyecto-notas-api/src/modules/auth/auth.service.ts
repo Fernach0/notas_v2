@@ -8,7 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
-import { Resend } from 'resend';
+import * as nodemailer from 'nodemailer';
 import { PrismaService } from '../../prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
@@ -66,16 +66,23 @@ export class AuthService {
     const resetLink = `${frontendUrl}/reset-password?token=${token}`;
     const nombre = usuario.nombreCompleto.split(' ')[0];
 
-    const resend = new Resend(this.config.get<string>('RESEND_API_KEY'));
-    await resend.emails.send({
-      from: 'Proyecto Notas <onboarding@resend.dev>',
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: this.config.get<string>('EMAIL_USER'),
+        pass: this.config.get<string>('EMAIL_PASS'),
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"Proyecto Notas" <${this.config.get<string>('EMAIL_USER')}>`,
       to: usuario.email!,
       subject: 'Recupera tu contraseña — Proyecto Notas',
       html: `
         <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px;background:#f8fafc;border-radius:12px;">
           <div style="text-align:center;margin-bottom:24px;">
             <div style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;background:#2563eb;border-radius:14px;">
-              <span style="font-size:28px;">📋</span>
+              <span style="font-size:28px;">&#128203;</span>
             </div>
             <h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:12px 0 4px;">Proyecto Notas</h1>
             <p style="color:#64748b;font-size:13px;margin:0;">Sistema de gestión académica</p>
@@ -102,7 +109,7 @@ export class AuthService {
           </div>
 
           <p style="text-align:center;color:#94a3b8;font-size:12px;margin-top:20px;">
-            © ${new Date().getFullYear()} Proyecto Notas — Sistema Académico
+            &copy; ${new Date().getFullYear()} Proyecto Notas &mdash; Sistema Académico
           </p>
         </div>
       `,

@@ -29,10 +29,10 @@ export default function MisMateriasPage() {
 
   // Promedios calculados (pueden no existir si aún no hay calificaciones)
   const { data: promedios } = useQuery({
-    queryKey: ['promedios-materia', user?.idUsuario, miMatricula?.curso.idAnioLectivo],
+    queryKey: ['promedios-materia', user?.idUsuario, miMatricula?.curso?.idAnioLectivo],
     queryFn: () =>
       promediosService.getByMateria(user!.idUsuario, miMatricula!.curso.idAnioLectivo),
-    enabled: !!user?.idUsuario && !!miMatricula,
+    enabled: !!user?.idUsuario && !!miMatricula?.curso?.idAnioLectivo,
   });
 
   // Índice de promedios por idMateria para lookup O(1)
