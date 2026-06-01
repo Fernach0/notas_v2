@@ -567,10 +567,10 @@ export default function ActividadesProfesorPage() {
 
       {/* ── Modales de actividad ──────────────────────────────────────────── */}
       <Modal isOpen={createModal.isOpen} onClose={createModal.close} title={`Nueva actividad — ${nombreMateria}`}>
-        <ActividadForm idParcial={parcialId!} onSubmit={(d) => createMut.mutateAsync(d)} isLoading={createMut.isPending} />
+        <ActividadForm idParcial={parcialId!} onSubmit={async (d) => { await createMut.mutateAsync(d); }} isLoading={createMut.isPending} />
       </Modal>
       <Modal isOpen={editModal.isOpen} onClose={editModal.close} title={`Editar actividad — ${nombreMateria}`}>
-        <ActividadForm idParcial={parcialId!} item={editModal.item} onSubmit={(d) => updateMut.mutateAsync({ id: editModal.item!.idActividad, data: d })} isLoading={updateMut.isPending} />
+        <ActividadForm idParcial={parcialId!} item={editModal.item} onSubmit={async (d) => { await updateMut.mutateAsync({ id: editModal.item!.idActividad, data: d }); }} isLoading={updateMut.isPending} />
       </Modal>
       <ConfirmDialog
         isOpen={deleteModal.isOpen} onClose={deleteModal.close}

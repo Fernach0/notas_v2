@@ -285,13 +285,13 @@ export default function UsuariosSection() {
       )}
 
       <Modal isOpen={createModal.isOpen} onClose={createModal.close} title="Nuevo usuario" size="md">
-        <UsuarioForm onSubmit={(d) => createMutation.mutateAsync(d)} isLoading={createMutation.isPending} />
+        <UsuarioForm onSubmit={(d) => createMutation.mutateAsync(d).then(() => {})} isLoading={createMutation.isPending} />
       </Modal>
 
       <Modal isOpen={editModal.isOpen} onClose={editModal.close} title="Editar usuario" size="md">
         <UsuarioForm
           item={editModal.item}
-          onSubmit={(d) => updateMutation.mutateAsync({ id: editModal.item!.idUsuario, data: d })}
+          onSubmit={(d) => updateMutation.mutateAsync({ id: editModal.item!.idUsuario, data: d }).then(() => {})}
           isLoading={updateMutation.isPending}
         />
       </Modal>

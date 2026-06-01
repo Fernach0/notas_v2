@@ -139,11 +139,11 @@ export default function CursosSection() {
       </div>
 
       <Modal isOpen={createModal.isOpen} onClose={createModal.close} title="Nuevo curso" size="sm">
-        <CursoForm onSubmit={(d) => createMutation.mutateAsync(d)} isLoading={createMutation.isPending} />
+        <CursoForm onSubmit={(d) => createMutation.mutateAsync(d).then(() => {})} isLoading={createMutation.isPending} />
       </Modal>
 
       <Modal isOpen={editModal.isOpen} onClose={editModal.close} title="Editar curso" size="sm">
-        <CursoForm item={editModal.item} onSubmit={(d) => updateMutation.mutateAsync({ id: editModal.item!.idCurso, data: d })} isLoading={updateMutation.isPending} />
+        <CursoForm item={editModal.item} onSubmit={(d) => updateMutation.mutateAsync({ id: editModal.item!.idCurso, data: d }).then(() => {})} isLoading={updateMutation.isPending} />
       </Modal>
 
       <ConfirmDialog

@@ -10,7 +10,7 @@ import { aniosLectivosService } from '@/services/anios-lectivos.service';
 import { materiasService } from '@/services/materias.service';
 
 const schema = z.object({
-  idAnioLectivo: z.coerce.number().min(1, 'Selecciona un año lectivo'),
+  idAnioLectivo: z.number({ error: 'Selecciona un año lectivo' }).min(1, 'Selecciona un año lectivo'),
   nombreCurso: z.string().min(2, 'Mínimo 2 caracteres').max(15, 'Máximo 15 caracteres'),
 });
 
@@ -57,7 +57,7 @@ export default function CursoForm({ item, onSubmit, isLoading }: Props) {
       <div>
         <label className="block text-sm font-medium text-slate-700 mb-1">Año lectivo</label>
         <select
-          {...register('idAnioLectivo')}
+          {...register('idAnioLectivo', { valueAsNumber: true })}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">Seleccionar...</option>

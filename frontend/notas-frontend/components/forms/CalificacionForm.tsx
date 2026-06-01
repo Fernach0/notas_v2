@@ -1,15 +1,17 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
-const schema = z.object({
-  nota: z.coerce.number().min(0, 'Mínimo 0').max(100, 'Máximo 100'),
-  comentario: z.string().max(200).optional(),
-});
+const makeSchema = (max: number) =>
+  z.object({
+    nota: z.number({ error: 'Ingresa un número' }).min(0, 'Mínimo 0').max(max, `Máximo ${max}`),
+    comentario: z.string().max(200).optional(),
+  });
 
-type FormData = z.infer<typeof schema>;
+type FormData = z.infer<ReturnType<typeof makeSchema>>;
 
 interface Props {
   idUsuario: string;
@@ -22,8 +24,9 @@ interface Props {
 }
 
 export default function CalificacionForm({ idUsuario, valorMaximo, notaActual, comentarioActual, onSubmit, isLoading }: Props) {
+  const schema = useMemo(() => makeSchema(valorMaximo), [valorMaximo]);
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(schema.refine((d) => d.nota <= valorMaximo, { message: `Máximo ${valorMaximo}`, path: ['nota'] })),
+    resolver: zodResolver(schema),
     defaultValues: { nota: notaActual, comentario: comentarioActual ?? '' },
   });
 
@@ -35,7 +38,7 @@ export default function CalificacionForm({ idUsuario, valorMaximo, notaActual, c
         <label className="block text-sm font-medium text-slate-700 mb-1">
           Nota <span className="text-slate-400">(máx. {valorMaximo})</span>
         </label>
-        <input type="number" step="0.01" {...register('nota')} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <input type="number" step="0.01" {...register('nota', { valueAsNumber: true })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         {errors.nota && <p className="mt-1 text-xs text-red-500">{errors.nota.message}</p>}
       </div>
 

@@ -26,7 +26,7 @@ const schema = z.object({
   contrasenaUsuario: z.string().min(6, 'Mínimo 6 caracteres').optional().or(z.literal('')),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
   estadoUsuario: z.enum(['ACTIVO', 'INACTIVO', 'BLOQUEADO']),
-  idRol: z.coerce.number({ required_error: 'Selecciona un rol' }).int().min(1, 'Selecciona un rol'),
+  idRol: z.number({ error: 'Selecciona un rol' }).int().min(1, 'Selecciona un rol'),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -135,7 +135,7 @@ export default function UsuarioForm({ item, onSubmit, isLoading }: Props) {
               <input
                 type="radio"
                 value={rol.id}
-                {...register('idRol')}
+                {...register('idRol', { valueAsNumber: true })}
                 className="sr-only"
               />
               {rol.label}

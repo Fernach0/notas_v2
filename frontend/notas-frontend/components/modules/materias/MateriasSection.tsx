@@ -90,12 +90,12 @@ export default function MateriasSection() {
 
       {/* Modal Crear */}
       <Modal isOpen={createModal.isOpen} onClose={createModal.close} title="Nueva materia" size="sm">
-        <MateriaForm onSubmit={(d) => createMutation.mutateAsync(d)} isLoading={createMutation.isPending} />
+        <MateriaForm onSubmit={(d) => createMutation.mutateAsync(d).then(() => {})} isLoading={createMutation.isPending} />
       </Modal>
 
       {/* Modal Editar */}
       <Modal isOpen={editModal.isOpen} onClose={editModal.close} title="Editar materia" size="sm">
-        <MateriaForm item={editModal.item} onSubmit={(d) => updateMutation.mutateAsync({ id: editModal.item!.idMateria, data: d })} isLoading={updateMutation.isPending} />
+        <MateriaForm item={editModal.item} onSubmit={(d) => updateMutation.mutateAsync({ id: editModal.item!.idMateria, data: d }).then(() => {})} isLoading={updateMutation.isPending} />
       </Modal>
 
       {/* Confirm Delete */}

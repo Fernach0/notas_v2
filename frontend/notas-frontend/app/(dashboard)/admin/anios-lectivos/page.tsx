@@ -121,11 +121,11 @@ export default function AniosLectivosPage() {
       </div>
 
       <Modal isOpen={createModal.isOpen} onClose={createModal.close} title="Nuevo año lectivo">
-        <AnioLectivoForm onSubmit={(d) => createMutation.mutateAsync(d)} isLoading={createMutation.isPending} />
+        <AnioLectivoForm onSubmit={async (d) => { await createMutation.mutateAsync(d); }} isLoading={createMutation.isPending} />
       </Modal>
 
       <Modal isOpen={editModal.isOpen} onClose={editModal.close} title="Editar año lectivo">
-        <AnioLectivoForm item={editModal.item} onSubmit={(d) => updateMutation.mutateAsync({ id: editModal.item!.idAnioLectivo, data: d })} isLoading={updateMutation.isPending} />
+        <AnioLectivoForm item={editModal.item} onSubmit={async (d) => { await updateMutation.mutateAsync({ id: editModal.item!.idAnioLectivo, data: d }); }} isLoading={updateMutation.isPending} />
       </Modal>
 
       <ConfirmDialog

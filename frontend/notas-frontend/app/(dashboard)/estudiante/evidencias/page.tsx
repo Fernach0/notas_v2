@@ -100,7 +100,7 @@ export default function EvidenciasEstudiantePage() {
             idActividad={uploadModal.item.idActividad}
             nombreActividad={uploadModal.item.tituloActividad ?? 'Actividad'}
             tipoActividad={uploadModal.item.tipoActividad}
-            onSubmit={(fd) => uploadMutation.mutateAsync(fd)}
+            onSubmit={async (fd) => { await uploadMutation.mutateAsync(fd); }}
             isLoading={uploadMutation.isPending}
           />
         )}
