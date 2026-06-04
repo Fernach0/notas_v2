@@ -358,7 +358,10 @@ Fase 1 completada.
 Antes de desplegar se realizaron los siguientes ajustes:
 
 - **`prisma/schema.prisma`** — Se agregó `directUrl = env("DIRECT_URL")` al datasource. Supabase usa un pooler de conexiones (pgbouncer) en el puerto 6543; Prisma necesita una URL directa separada para funcionar correctamente.
-- **`src/main.ts`** — El CORS se restringió a `FRONTEND_URL` en lugar de aceptar cualquier origen.
+- **`src/main.ts`** — El CORS se restringió a `FRONTEND_URL`. El `app.listen` se cambió a `app.listen(port, '0.0.0.0')` para que Render detecte el puerto (sin el host `0.0.0.0` Render hace timeout porque solo escucha en `localhost`).
+- **`tsconfig.json`** — Se cambió `module` de `"nodenext"` a `"commonjs"` y `moduleResolution` de `"nodenext"` a `"node"`. El modo `nodenext` es incompatible con el compilador de NestJS y causaba que el build no generara `dist/main.js`.
+- **`tsconfig.build.json`** — Se añadió `"rootDir": "src"` y se excluyeron `prisma.config.ts` y la carpeta `prisma`. Sin esto, TypeScript incluía archivos fuera de `src/` e infería mal el directorio raíz, compilando `src/main.ts` a `dist/src/main.js` en vez de `dist/main.js`.
+- **`package.json`** — El script `start:prod` quedó como `node dist/main.js` (extensión explícita requerida en Node 24).
 
 ### 2.2 Subir el código a GitHub
 
@@ -442,12 +445,12 @@ Los valores van **sin comillas** — Render los trata como strings automáticame
 3. Busca estas líneas al final del log para confirmar que todo está bien:
    ```
    Build successful 🎉
-   🚀 Servidor corriendo en http://localhost:10000/api
+   Servidor corriendo en el puerto 10000
    ```
 
-4. Una vez desplegado, Render te asigna una URL pública con este formato:
+4. Una vez desplegado, Render asigna una URL pública. La URL real del proyecto es:
    ```
-   https://proyecto-notas-api.onrender.com
+   https://notas-v2.onrender.com
    ```
    **Guarda esta URL** — la necesitarás como `NEXT_PUBLIC_API_URL` en el frontend.
 
@@ -455,7 +458,7 @@ Los valores van **sin comillas** — Render los trata como strings automáticame
 
 Abre el navegador y entra a:
 ```
-https://proyecto-notas-api.onrender.com/api/docs
+https://notas-v2.onrender.com/api/docs
 ```
 Deberías ver la documentación Swagger del API. Si la ves, el backend está correctamente desplegado.
 
@@ -463,9 +466,123 @@ Deberías ver la documentación Swagger del API. Si la ves, el backend está cor
 
 ---
 
-## FASE 3 — Frontend en Vercel (pendiente)
+## FASE 3 — Frontend en Vercel
 
-> Se documentará en la siguiente etapa del despliegue.
+### 3.1 Subir el código a GitHub
+
+Si el repositorio ya está en GitHub (monorepo completo), salta al paso 3.2. Si no:
+
+1. Ve a **[https://github.com](https://github.com)** e inicia sesión.
+2. Crea un repositorio nuevo o usa el mismo del backend si es monorepo.
+3. Desde la raíz del proyecto ejecuta:
+   ```bash
+   git add .
+   git commit -m "frontend listo para despliegue"
+   git push origin main
+   ```
+
+---
+
+### 3.2 Crear el proyecto en Vercel
+
+1. Ve a **[https://vercel.com](https://vercel.com)** e inicia sesión con tu cuenta de GitHub.
+
+2. Haz clic en **"Add New… → Project"** (botón negro, parte superior derecha).
+
+3. En **"Import Git Repository"** selecciona el repositorio del proyecto. Si no aparece, haz clic en **"Adjust GitHub App Permissions"** para dar acceso.
+
+4. En la pantalla de configuración del proyecto, despliega la sección **"Root Directory"** y escribe:
+   ```
+   frontend/notas-frontend
+   ```
+   > Esto es crítico en un monorepo. Sin esto, Vercel busca el `package.json` en la raíz y falla.
+
+5. El resto de campos se auto-detectan:
+
+   | Campo | Valor auto-detectado |
+   |-------|---------------------|
+   | **Framework Preset** | Next.js |
+   | **Build Command** | `next build` |
+   | **Output Directory** | `.next` |
+   | **Install Command** | `npm install` |
+
+6. **No hagas clic en "Deploy" todavía** — primero agrega las variables de entorno.
+
+---
+
+### 3.3 Agregar variables de entorno en Vercel
+
+En la misma pantalla, despliega la sección **"Environment Variables"** y agrega:
+
+| Variable | Valor |
+|----------|-------|
+| `NEXT_PUBLIC_API_URL` | `https://notas-v2.onrender.com/api` |
+| `NEXTAUTH_SECRET` | `notas_escuela_secret_jwt_2026_very_long_and_secure` |
+| `NEXTAUTH_URL` | *(dejar vacío por ahora — se completa en el paso 3.5)* |
+
+> **`NEXT_PUBLIC_API_URL`** lleva el prefijo `NEXT_PUBLIC_` porque Next.js la expone al navegador. Sin ese prefijo, el cliente no puede leerla.
+>
+> **`NEXTAUTH_URL`** requiere la URL definitiva de Vercel, que no sabrás hasta después del primer deploy. Agrégala vacía o con un placeholder — la actualizarás en el paso 3.5.
+
+Haz clic en **"Deploy"**.
+
+---
+
+### 3.4 Primer despliegue
+
+Vercel ejecutará el build. El proceso toma entre 1 y 3 minutos. Busca estas líneas al final del log para confirmar:
+
+```
+✓ Compiled successfully
+✓ Collecting page data
+✓ Generating static pages
+Route (app)  ...
+```
+
+Al terminar, Vercel asignó estas URLs al proyecto:
+- `notas-v2-aa1e9wxs8-fernach0s-projects.vercel.app` — URL del deployment específico (cambia con cada deploy, no usar)
+- **`notas-v2-five.vercel.app`** — Dominio permanente del proyecto ✓ (este es el que se usa)
+
+---
+
+### 3.5 Actualizar NEXTAUTH_URL en Vercel
+
+NextAuth necesita saber su propia URL para generar callbacks correctamente.
+
+1. En el dashboard de Vercel, entra a tu proyecto → **Settings → Environment Variables**.
+2. Edita la variable `NEXTAUTH_URL` y pon:
+   ```
+   https://notas-v2-five.vercel.app
+   ```
+3. Guarda y haz un **Redeploy** (botón en la pestaña **Deployments → botón "…" → Redeploy**).
+
+---
+
+### 3.6 Actualizar FRONTEND_URL en Render
+
+El backend tiene CORS configurado para aceptar solo el dominio del frontend. Hay que actualizarlo con la URL real de Vercel.
+
+1. Ve a **[https://render.com](https://render.com)** → tu servicio `notas-v2`.
+2. Entra a **Environment** (menú lateral).
+3. Edita la variable `FRONTEND_URL`:
+   ```
+   https://notas-v2-five.vercel.app
+   ```
+4. Render reiniciará el servicio automáticamente.
+
+---
+
+### 3.7 Verificar que el frontend responde
+
+1. Abre `https://notas-v2-five.vercel.app` en el navegador — deberías ver la pantalla de login.
+2. Inicia sesión con las credenciales de prueba:
+   - **Correo:** `admin@escuela.ec`
+   - **Contraseña:** `Notas2026!`
+3. Si entras al dashboard, el despliegue está completo.
+
+> **Si aparece error de CORS:** verifica que `FRONTEND_URL` en Render coincide exactamente con la URL de Vercel (sin barra final).
+>
+> **Si aparece error de NextAuth:** verifica que `NEXTAUTH_URL` en Vercel coincide exactamente con la URL del deployment activo.
 
 ---
 
@@ -486,10 +603,10 @@ Deberías ver la documentación Swagger del API. Si la ves, el backend está cor
 
 ## Credenciales de prueba
 
-| Rol | Cédula | Contraseña |
-|-----|--------|------------|
-| Administrador | `1700000001` | `Notas2026!` |
-| Profesor | `1700000100` | `Notas2026!` |
-| Estudiante | `1700000200` | `Notas2026!` |
+| Rol | Correo electrónico | Contraseña |
+|-----|-------------------|------------|
+| Administrador | `admin@escuela.ec` | `Notas2026!` |
+| Profesor | `msalazar@escuela.ec` | `Notas2026!` |
+| Estudiante | `sortega@escuela.ec` | `Notas2026!` |
 
 > **Importante:** Estas credenciales son solo para pruebas. Cambiarlas antes de un ambiente de producción real.

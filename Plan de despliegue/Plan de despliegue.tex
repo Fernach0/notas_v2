@@ -1,0 +1,850 @@
+\documentclass[12pt, a4paper]{article}
+
+% ── PAQUETES ──────────────────────────────────────────────────────────────────
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{parskip}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\usepackage{amssymb}
+\usepackage{titlesec}
+
+\tcbuselibrary{skins, breakable}
+
+% ── CONFIGURACIÓN HYPERREF ────────────────────────────────────────────────────
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!60!black,
+    urlcolor=blue!60!black,
+    pdftitle={Plan de Despliegue - Proyecto Notas},
+    pdfauthor={Proyecto Notas v2}
+}
+
+% ── ENCABEZADO Y PIE DE PÁGINA ───────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Plan de Despliegue --- Proyecto Notas}
+\lhead{\leftmark}
+\rfoot{\thepage}
+
+% ── COLORES ───────────────────────────────────────────────────────────────────
+\definecolor{completado}{RGB}{22, 163, 74}
+\definecolor{pendiente}{RGB}{217, 119, 6}
+\definecolor{codebg}{RGB}{245, 245, 245}
+\definecolor{codefg}{RGB}{30, 30, 30}
+\definecolor{notabg}{RGB}{254, 249, 195}
+\definecolor{notaborder}{RGB}{202, 138, 4}
+\definecolor{importantebg}{RGB}{254, 226, 226}
+\definecolor{importanteborder}{RGB}{220, 38, 38}
+\definecolor{supabase}{RGB}{62, 207, 142}
+\definecolor{render}{RGB}{70, 72, 228}
+\definecolor{vercel}{RGB}{0, 0, 0}
+
+% ── CONFIGURACIÓN LISTINGS ────────────────────────────────────────────────────
+\lstdefinestyle{sql}{
+    language=SQL,
+    basicstyle=\tiny\ttfamily,
+    backgroundcolor=\color{codebg},
+    commentstyle=\color{gray}\itshape,
+    keywordstyle=\color{blue!70!black}\bfseries,
+    stringstyle=\color{orange!80!black},
+    frame=single,
+    framerule=0.5pt,
+    rulecolor=\color{gray!40},
+    breaklines=true,
+    breakatwhitespace=false,
+    keepspaces=true,
+    showspaces=false,
+    showstringspaces=false,
+    tabsize=2,
+    captionpos=b,
+}
+
+\lstdefinestyle{bash}{
+    language=bash,
+    basicstyle=\small\ttfamily,
+    backgroundcolor=\color{gray!10},
+    keywordstyle=\color{blue!70!black}\bfseries,
+    frame=single,
+    framerule=0.5pt,
+    rulecolor=\color{gray!40},
+    breaklines=true,
+    keepspaces=true,
+    showstringspaces=false,
+}
+
+\lstdefinestyle{texto}{
+    basicstyle=\small\ttfamily,
+    backgroundcolor=\color{codebg},
+    frame=single,
+    framerule=0.5pt,
+    rulecolor=\color{gray!40},
+    breaklines=true,
+    keepspaces=true,
+}
+
+% ── CAJAS DE AVISO ────────────────────────────────────────────────────────────
+\newtcolorbox{nota}{
+    colback=notabg,
+    colframe=notaborder,
+    fonttitle=\bfseries\small,
+    title={Nota},
+    breakable,
+    left=4pt, right=4pt, top=4pt, bottom=4pt,
+}
+
+\newtcolorbox{importante}{
+    colback=importantebg,
+    colframe=importanteborder,
+    fonttitle=\bfseries\small,
+    title={Importante},
+    breakable,
+    left=4pt, right=4pt, top=4pt, bottom=4pt,
+}
+
+% ── COMANDOS PERSONALIZADOS ───────────────────────────────────────────────────
+\newcommand{\ok}{\textcolor{completado}{\textbf{Completado}}}
+\newcommand{\pend}{\textcolor{pendiente}{\textbf{Pendiente}}}
+\newcommand{\fase}[2]{\section*{\colorbox{#1!20}{\makebox[\linewidth][l]{\color{#1!60!black}\textbf{#2}}}}\addcontentsline{toc}{section}{#2}}
+\newcommand{\subfase}[1]{\subsection{#1}}
+\newcommand{\cmd}[1]{\texttt{#1}}
+\newcommand{\var}[1]{\texttt{\textbf{#1}}}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{document}
+
+% ── PORTADA ──────────────────────────────────────────────────────────────────
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+
+    {\LARGE \textbf{Proyecto Notas v2}}\\[0.5cm]
+    \rule{\linewidth}{0.5pt}\\[0.8cm]
+    {\Huge \textbf{Plan de Despliegue}}\\[0.8cm]
+    \rule{\linewidth}{0.5pt}
+
+    \vspace{1.5cm}
+
+    \begin{tabular}{ll}
+        \textbf{Backend:}        & NestJS + Prisma ORM \\[0.3cm]
+        \textbf{Base de datos:}  & Supabase (PostgreSQL) \\[0.3cm]
+        \textbf{Frontend:}       & Next.js + NextAuth \\[0.3cm]
+        \textbf{Plataformas:}    & Render (backend) \quad Vercel (frontend) \\[0.3cm]
+        \textbf{Autor:}          & [Nombre del Autor] \\[0.3cm]
+        \textbf{Versión:}        & 1.0 \\[0.3cm]
+        \textbf{Fecha:}          & \today \\[0.3cm]
+    \end{tabular}
+
+    \vfill
+    {\small Documento vivo --- se actualiza conforme avanza el despliegue.}
+\end{titlepage}
+
+% ── ÍNDICE ────────────────────────────────────────────────────────────────────
+\newpage
+\tableofcontents
+\newpage
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Estado General del Despliegue}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{c >{\bfseries}p{4cm} p{6cm} c}
+        \toprule
+        \textbf{Fase} & \textbf{Componente} & \textbf{Descripción} & \textbf{Estado} \\
+        \midrule
+        1 & Base de datos & Supabase (PostgreSQL) & \ok \\
+        2 & Backend       & API NestJS en Render  & \ok \\
+        3 & Frontend      & Next.js en Vercel     & \ok \\
+        4 & Variables     & Conexión entre servicios & \ok \\
+        5 & Pruebas       & Verificación en producción & \pend \\
+        \bottomrule
+    \end{tabular}
+    \caption{Estado general del proceso de despliegue.}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\newpage
+\section{Fase 1 --- Base de Datos en Supabase}
+
+\subsection{Crear el proyecto en Supabase}
+
+\begin{enumerate}
+    \item Abrir el navegador y navegar a \url{https://supabase.com}.
+    \item Hacer clic en \textbf{``Start your project''} o \textbf{``Sign in''} si ya se tiene cuenta.
+    \item Iniciar sesión con cuenta de \textbf{GitHub} o correo electrónico.
+    \item Dentro del dashboard, hacer clic en el botón verde \textbf{``New project''}.
+    \item Completar el formulario:
+    \begin{itemize}
+        \item \textbf{Organization:} seleccionar la organización por defecto.
+        \item \textbf{Project name:} \cmd{proyecto-notas}
+        \item \textbf{Database Password:} contraseña segura --- \textbf{guardarla}, se usará después. Ejemplo: \cmd{ProyectoNotas2026!}
+        \item \textbf{Region:} \textbf{South America (São Paulo)} --- la más cercana a Ecuador.
+        \item \textbf{Pricing plan:} Free.
+    \end{itemize}
+    \item Hacer clic en \textbf{``Create new project''} y esperar 1--2 minutos.
+\end{enumerate}
+
+% AQUÍ COLOCAR: captura del formulario de creación de proyecto en Supabase.
+% Qué mostrar: los campos Organization, Project name, Database Password y Region.
+% Resaltar con recuadro la selección "South America (São Paulo)".
+% Por qué: es el paso más propenso a errores de configuración regional.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{supabase_nuevo_proyecto.png}
+    \caption{Formulario de creación de nuevo proyecto en Supabase.}
+    \label{fig:supabase_nuevo}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Abrir el SQL Editor}
+
+\begin{enumerate}
+    \item Una vez creado el proyecto, en el \textbf{menú lateral izquierdo} hacer clic en \textbf{``SQL Editor''} (ícono \cmd{</>}).
+    \item Hacer clic en \textbf{``New query''} (botón \texttt{+}).
+    \item Se abrirá un área de texto en blanco donde se pegará el SQL.
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Ejecutar el SQL de estructura (DDL)}
+
+Copiar \textbf{todo} el bloque de abajo, pegarlo en el editor y hacer clic en \textbf{``Run''} (\texttt{Ctrl + Enter}).
+
+Al finalizar, el editor mostrará el mensaje \cmd{Success. No rows returned} --- eso es correcto.
+
+\begin{lstlisting}[style=sql, caption={DDL completo --- estructura de tablas y ENUMs.}]
+-- ============================================================
+-- PROYECTO NOTAS -- DDL completo para Supabase / PostgreSQL
+-- ============================================================
+
+-- ENUMS
+CREATE TYPE "EstadoUsuario"    AS ENUM ('ACTIVO', 'INACTIVO', 'BLOQUEADO');
+CREATE TYPE "EstadoLectivo"    AS ENUM ('ACTIVO', 'FINALIZADO', 'PLANIFICADO');
+CREATE TYPE "EstadoEvidencia"  AS ENUM ('ACTIVO', 'ELIMINADO');
+CREATE TYPE "TipoActividad"    AS ENUM ('TAREA', 'EXAMEN', 'PROYECTO', 'PRUEBA');
+CREATE TYPE "TipoNotificacion" AS ENUM ('NUEVA_ACTIVIDAD', 'CALIFICACION', 'RECORDATORIO', 'SISTEMA');
+
+-- TABLAS
+CREATE TABLE anio_lectivo (
+  id_aniolectivo SERIAL          PRIMARY KEY,
+  fecha_inicio   DATE            NOT NULL,
+  fecha_final    DATE            NOT NULL,
+  estado_lectivo "EstadoLectivo" NOT NULL
+);
+
+CREATE TABLE usuario (
+  id_usuario          VARCHAR(10)     PRIMARY KEY,
+  nombre_completo     VARCHAR(100)    NOT NULL,
+  contrasena_usuario  VARCHAR(255)    NOT NULL,
+  estado_usuario      "EstadoUsuario" NOT NULL,
+  email               VARCHAR(255)    UNIQUE,
+  token_recuperacion  VARCHAR(255),
+  expiracion_token    TIMESTAMP
+);
+
+CREATE TABLE rol (
+  id_rol     SERIAL      PRIMARY KEY,
+  nombre_rol VARCHAR(20) NOT NULL
+);
+
+CREATE TABLE usuario_rol (
+  id_usuario VARCHAR(10) NOT NULL,
+  id_rol     INTEGER     NOT NULL,
+  PRIMARY KEY (id_usuario, id_rol),
+  FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE,
+  FOREIGN KEY (id_rol)     REFERENCES rol(id_rol)
+);
+
+CREATE TABLE curso (
+  id_curso       SERIAL      PRIMARY KEY,
+  id_aniolectivo INTEGER     NOT NULL,
+  nombre_curso   VARCHAR(15) NOT NULL,
+  FOREIGN KEY (id_aniolectivo) REFERENCES anio_lectivo(id_aniolectivo)
+);
+
+CREATE TABLE usuario_curso (
+  id_usuario VARCHAR(10) NOT NULL,
+  id_curso   INTEGER     NOT NULL,
+  PRIMARY KEY (id_usuario, id_curso),
+  FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE,
+  FOREIGN KEY (id_curso)   REFERENCES curso(id_curso)     ON DELETE CASCADE
+);
+
+CREATE TABLE materia (
+  id_materia     SERIAL      PRIMARY KEY,
+  nombre_materia VARCHAR(30) NOT NULL
+);
+
+CREATE TABLE curso_materia (
+  id_curso   INTEGER NOT NULL,
+  id_materia INTEGER NOT NULL,
+  PRIMARY KEY (id_curso, id_materia),
+  FOREIGN KEY (id_curso)   REFERENCES curso(id_curso)     ON DELETE CASCADE,
+  FOREIGN KEY (id_materia) REFERENCES materia(id_materia) ON DELETE CASCADE
+);
+
+CREATE TABLE profesor_materia_curso (
+  id_usuario VARCHAR(10) NOT NULL,
+  id_curso   INTEGER     NOT NULL,
+  id_materia INTEGER     NOT NULL,
+  PRIMARY KEY (id_usuario, id_curso, id_materia),
+  FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE,
+  FOREIGN KEY (id_curso)   REFERENCES curso(id_curso)     ON DELETE CASCADE,
+  FOREIGN KEY (id_materia) REFERENCES materia(id_materia) ON DELETE CASCADE
+);
+
+CREATE TABLE parcial (
+  id_parcial     SERIAL  PRIMARY KEY,
+  id_materia     INTEGER NOT NULL,
+  id_curso       INTEGER NOT NULL,
+  numero_parcial INTEGER NOT NULL,
+  FOREIGN KEY (id_materia) REFERENCES materia(id_materia),
+  FOREIGN KEY (id_curso)   REFERENCES curso(id_curso),
+  CONSTRAINT uq_parcial_materia_curso_numero UNIQUE (id_materia, id_curso, numero_parcial)
+);
+
+CREATE TABLE actividad (
+  id_actividad         SERIAL           PRIMARY KEY,
+  id_parcial           INTEGER          NOT NULL,
+  tipo_actividad       "TipoActividad"  NOT NULL,
+  fecha_inicio_entrega DATE             NOT NULL,
+  fecha_fin_entrega    DATE             NOT NULL,
+  descripcion          VARCHAR(200),
+  titulo_actividad     VARCHAR(20),
+  valor_maximo         DOUBLE PRECISION NOT NULL DEFAULT 10.0,
+  FOREIGN KEY (id_parcial) REFERENCES parcial(id_parcial)
+);
+
+CREATE TABLE calificacion (
+  id_calificacion SERIAL           PRIMARY KEY,
+  id_usuario      VARCHAR(10)      NOT NULL,
+  id_actividad    INTEGER          NOT NULL,
+  nota            DOUBLE PRECISION NOT NULL,
+  comentario      VARCHAR(200),
+  FOREIGN KEY (id_usuario)   REFERENCES usuario(id_usuario),
+  FOREIGN KEY (id_actividad) REFERENCES actividad(id_actividad),
+  CONSTRAINT uq_calificacion_usuario_actividad UNIQUE (id_usuario, id_actividad)
+);
+
+CREATE TABLE evidencias (
+  id_evidencia     SERIAL            PRIMARY KEY,
+  id_usuario       VARCHAR(10)       NOT NULL,
+  id_actividad     INTEGER           NOT NULL,
+  archivo_bytes    BYTEA,
+  nombre_archivo   VARCHAR(255)      NOT NULL,
+  fecha_subida     TIMESTAMP         DEFAULT NOW(),
+  tamanio          BIGINT            NOT NULL,
+  tipo_contenido   VARCHAR(255)      NOT NULL,
+  estado           "EstadoEvidencia" NOT NULL DEFAULT 'ACTIVO',
+  nombre_actividad VARCHAR(255)      NOT NULL,
+  codigo_actividad VARCHAR(255)      NOT NULL UNIQUE,
+  tipo_actividad   VARCHAR(255)      NOT NULL,
+  FOREIGN KEY (id_usuario)   REFERENCES usuario(id_usuario),
+  FOREIGN KEY (id_actividad) REFERENCES actividad(id_actividad),
+  CONSTRAINT uq_evidencia_usuario_actividad UNIQUE (id_usuario, id_actividad)
+);
+
+CREATE TABLE notificaciones (
+  id_notificacion      SERIAL             PRIMARY KEY,
+  id_usuario           VARCHAR(10)        NOT NULL,
+  id_actividad         INTEGER,
+  tipo_notificacion    "TipoNotificacion" NOT NULL,
+  mensaje_notificacion VARCHAR(255)       NOT NULL,
+  fecha_notificacion   TIMESTAMP          NOT NULL,
+  leida                BOOLEAN            NOT NULL DEFAULT FALSE,
+  FOREIGN KEY (id_usuario)   REFERENCES usuario(id_usuario),
+  FOREIGN KEY (id_actividad) REFERENCES actividad(id_actividad)
+);
+
+CREATE TABLE promedio_materia_estudiante (
+  id_promedio_materia    SERIAL           PRIMARY KEY,
+  id_usuario             VARCHAR(10)      NOT NULL,
+  id_aniolectivo         INTEGER          NOT NULL,
+  id_curso               INTEGER          NOT NULL,
+  id_materia             INTEGER          NOT NULL,
+  promedio_parcial1      DOUBLE PRECISION,
+  promedio_parcial2      DOUBLE PRECISION,
+  promedio_parcial3      DOUBLE PRECISION,
+  promedio_final_materia DOUBLE PRECISION,
+  fecha_actualizacion    TIMESTAMP,
+  FOREIGN KEY (id_usuario)     REFERENCES usuario(id_usuario),
+  FOREIGN KEY (id_aniolectivo) REFERENCES anio_lectivo(id_aniolectivo),
+  FOREIGN KEY (id_curso)       REFERENCES curso(id_curso),
+  FOREIGN KEY (id_materia)     REFERENCES materia(id_materia),
+  CONSTRAINT uq_promedio_materia UNIQUE (id_usuario, id_aniolectivo, id_curso, id_materia)
+);
+
+CREATE TABLE promediogeneralestudiante (
+  id_promedio_general SERIAL           PRIMARY KEY,
+  id_usuario          VARCHAR(10)      NOT NULL,
+  id_curso            INTEGER          NOT NULL,
+  promedio_general    DOUBLE PRECISION NOT NULL,
+  comportamiento      VARCHAR(1)       NOT NULL,
+  FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario),
+  FOREIGN KEY (id_curso)   REFERENCES curso(id_curso),
+  CONSTRAINT uq_promedio_general UNIQUE (id_usuario, id_curso)
+);
+\end{lstlisting}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Ejecutar el SQL de datos semilla (SEED)}
+
+Abrir una \textbf{nueva query} (botón \texttt{+}) y ejecutar el siguiente SQL.
+Al finalizar aparecerá el mensaje \cmd{33 rows affected} aproximadamente.
+
+\begin{lstlisting}[style=sql, caption={SEED --- datos de prueba. Contrasena de todos los usuarios: \texttt{Notas2026!}}]
+-- ROLES
+INSERT INTO rol (id_rol, nombre_rol) VALUES
+  (1, 'Administrador'),
+  (2, 'Profesor'),
+  (3, 'Estudiante');
+
+-- ADMINISTRADORES (hash bcrypt de "Notas2026!", 10 rondas)
+INSERT INTO usuario (id_usuario, nombre_completo, contrasena_usuario, estado_usuario, email) VALUES
+  ('1700000001', 'Administrador del Sistema',  '$2b$10$0ZmmtAM87Q9nEPlkmIibBuli0uSvWqp32aOuYVmnKMpDUART/C4Bu', 'ACTIVO', 'admin@escuela.ec'),
+  ('1700000002', 'Directora Academica Perez',   '$2b$10$0ZmmtAM87Q9nEPlkmIibBuli0uSvWqp32aOuYVmnKMpDUART/C4Bu', 'ACTIVO', 'directora@escuela.ec'),
+  ('1700000003', 'Secretaria General Morales',  '$2b$10$0ZmmtAM87Q9nEPlkmIibBuli0uSvWqp32aOuYVmnKMpDUART/C4Bu', 'ACTIVO', 'secretaria@escuela.ec');
+
+-- PROFESORES
+INSERT INTO usuario (id_usuario, nombre_completo, contrasena_usuario, estado_usuario, email) VALUES
+  ('1700000100', 'Maria Elena Salazar Vega',     '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'msalazar@escuela.ec'),
+  ('1700000101', 'Roberto Oswaldo Jimenez Cruz', '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'rjimenez@escuela.ec'),
+  ('1700000102', 'Sandra Lorena Morocho Pinto',  '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'smorochop@escuela.ec'),
+  ('1700000103', 'Diego Andres Paredes Luna',    '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'dparedes@escuela.ec'),
+  ('1700000104', 'Patricia Susana Ramos Flores', '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'pramos@escuela.ec'),
+  ('1700000105', 'Luis Fernando Castro Mora',    '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'lcastro@escuela.ec'),
+  ('1700000106', 'Veronica Isabel Almeida Soto', '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'valmeida@escuela.ec'),
+  ('1700000107', 'Marco Antonio Herrera Brito',  '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'mherrera@escuela.ec'),
+  ('1700000108', 'Carmen Estela Gutierrez Navas','$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'cgutierrez@escuela.ec'),
+  ('1700000109', 'Esteban David Villalba Chavez','$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'evillalba@escuela.ec');
+
+-- ESTUDIANTES
+INSERT INTO usuario (id_usuario, nombre_completo, contrasena_usuario, estado_usuario, email) VALUES
+  ('1700000200', 'Sebastian Mateo Ortega Ruiz',     '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'sortega@escuela.ec'),
+  ('1700000201', 'Valeria Camila Montoya Sanchez',  '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'vmontoya@escuela.ec'),
+  ('1700000202', 'Andres Felipe Zambrano Torres',   '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'azambrano@escuela.ec'),
+  ('1700000203', 'Gabriela Alejandra Suarez Leon',  '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'gsuarez@escuela.ec'),
+  ('1700000204', 'Nicolas Eduardo Alarcon Paz',     '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'nalarcon@escuela.ec'),
+  ('1700000205', 'Isabella Sofia Delgado Reyes',    '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'idelgado@escuela.ec'),
+  ('1700000206', 'Emilio Javier Perez Mejia',       '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'eperez@escuela.ec'),
+  ('1700000207', 'Daniela Fernanda Cuesta Mora',    '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'dcuesta@escuela.ec'),
+  ('1700000208', 'Matias Renato Acosta Vargas',     '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'macosta@escuela.ec'),
+  ('1700000209', 'Lucia Beatriz Molina Aguirre',    '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'lmolina@escuela.ec'),
+  ('1700000210', 'Joaquin Alejandro Vera Espinoza', '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'jvera@escuela.ec'),
+  ('1700000211', 'Martina Patricia Ordonez Rios',   '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'mordonez@escuela.ec'),
+  ('1700000212', 'Santiago Israel Palacios Cruz',   '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'spalacios@escuela.ec'),
+  ('1700000213', 'Ariana Michelle Carrillo Bernal', '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'acarrillo@escuela.ec'),
+  ('1700000214', 'Tomas Agustin Noboa Castro',      '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'tnoboa@escuela.ec'),
+  ('1700000215', 'Camila Estefania Tamayo Silva',   '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'ctamayo@escuela.ec'),
+  ('1700000216', 'Benjamin Rodrigo Andrade Lema',   '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'bandrade@escuela.ec'),
+  ('1700000217', 'Paula Renata Bravo Intriago',     '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'pbravo@escuela.ec'),
+  ('1700000218', 'Maximiliano Jose Quispe Chica',   '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'mquispe@escuela.ec'),
+  ('1700000219', 'Natalia Priscila Urgiles Moran',  '$2b$10$2ITDEzh5l.otk4iTCxEFPu4YTtq8wK6./2EuljqOOOG1/LKYIJsaK', 'ACTIVO', 'nurgiles@escuela.ec');
+
+-- ASIGNACION DE ROLES
+INSERT INTO usuario_rol (id_usuario, id_rol) VALUES
+  ('1700000001', 1), ('1700000002', 1), ('1700000003', 1);
+
+INSERT INTO usuario_rol (id_usuario, id_rol) VALUES
+  ('1700000100', 2), ('1700000101', 2), ('1700000102', 2), ('1700000103', 2), ('1700000104', 2),
+  ('1700000105', 2), ('1700000106', 2), ('1700000107', 2), ('1700000108', 2), ('1700000109', 2);
+
+INSERT INTO usuario_rol (id_usuario, id_rol) VALUES
+  ('1700000200', 3), ('1700000201', 3), ('1700000202', 3), ('1700000203', 3), ('1700000204', 3),
+  ('1700000205', 3), ('1700000206', 3), ('1700000207', 3), ('1700000208', 3), ('1700000209', 3),
+  ('1700000210', 3), ('1700000211', 3), ('1700000212', 3), ('1700000213', 3), ('1700000214', 3),
+  ('1700000215', 3), ('1700000216', 3), ('1700000217', 3), ('1700000218', 3), ('1700000219', 3);
+\end{lstlisting}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Obtener la cadena de conexión (DATABASE\_URL)}
+
+\begin{enumerate}
+    \item En el menú lateral de Supabase, hacer clic en el ícono de engranaje \textbf{``Project Settings''}.
+    \item Seleccionar \textbf{``Database''} en el submenú.
+    \item Bajar hasta la sección \textbf{``Connection string''}.
+    \item Asegurarse de que el selector muestre \textbf{``URI''}.
+    \item Seleccionar el modo \textbf{``Transaction pooler''} (recomendado para apps en la nube, puerto 6543).
+    \item La URL tendrá este formato:
+\end{enumerate}
+
+\begin{lstlisting}[style=texto]
+postgresql://postgres.XXXXXXXXXXXX:TU_PASSWORD@aws-0-sa-east-1.pooler.supabase.com:6543/postgres
+\end{lstlisting}
+
+\begin{importante}
+    Reemplazar \cmd{TU\_PASSWORD} con la contraseña ingresada al crear el proyecto en Supabase. \textbf{Guardar esta URL} --- se usará como \var{DATABASE\_URL} en el backend.
+\end{importante}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Verificar que los datos se cargaron correctamente}
+
+\begin{enumerate}
+    \item En el menú lateral hacer clic en \textbf{``Table Editor''}.
+    \item Seleccionar la tabla \cmd{usuario} --- deben aparecer 33 filas (3 admins + 10 profesores + 20 estudiantes).
+    \item Seleccionar la tabla \cmd{rol} --- deben aparecer 3 filas: Administrador, Profesor, Estudiante.
+    \item Seleccionar la tabla \cmd{usuario\_rol} --- deben aparecer 33 filas de asignaciones.
+\end{enumerate}
+
+\begin{nota}
+    Fase 1 completada. La base de datos está lista para recibir conexiones del backend.
+\end{nota}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\newpage
+\section{Fase 2 --- Backend en Render}
+
+\subsection{Cambios en el código aplicados antes del despliegue}
+
+Los siguientes archivos del proyecto fueron modificados para compatibilidad con Render:
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{p{4.5cm} p{9cm}}
+        \toprule
+        \textbf{Archivo} & \textbf{Cambio realizado} \\
+        \midrule
+        \cmd{prisma/schema.prisma}  & Se agregó \cmd{directUrl = env("DIRECT\_URL")} al datasource. Supabase usa pgbouncer en el puerto 6543; Prisma necesita una URL directa separada para migraciones. \\[0.3cm]
+        \cmd{src/main.ts}           & Se cambió \cmd{app.listen(port)} a \cmd{app.listen(port, '0.0.0.0')} para que Render detecte el puerto. Sin el host \cmd{0.0.0.0}, Render hace timeout porque el proceso solo escucha en \cmd{localhost}. \\[0.3cm]
+        \cmd{tsconfig.json}         & Se cambió \cmd{module} de \cmd{"nodenext"} a \cmd{"commonjs"} y \cmd{moduleResolution} a \cmd{"node"}. El modo \cmd{nodenext} es incompatible con el compilador de NestJS. \\[0.3cm]
+        \cmd{tsconfig.build.json}   & Se añadió \cmd{"rootDir": "src"} y se excluyeron \cmd{prisma.config.ts} y la carpeta \cmd{prisma}. Sin esto, TypeScript compilaba \cmd{src/main.ts} a \cmd{dist/src/main.js} en vez de \cmd{dist/main.js}. \\[0.3cm]
+        \cmd{package.json}          & El script \cmd{start:prod} quedó como \cmd{node dist/main.js} (extensión explícita requerida en Node 24). \\
+        \bottomrule
+    \end{tabular}
+    \caption{Cambios en el código aplicados para el despliegue en Render.}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Subir el código a GitHub}
+
+Render despliega desde un repositorio de GitHub. Ejecutar en la terminal desde la raíz del proyecto:
+
+\begin{lstlisting}[style=bash]
+git init
+git add .
+git commit -m "initial commit"
+git remote add origin https://github.com/TU_USUARIO/proyecto-notas-api.git
+git push -u origin main
+\end{lstlisting}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Crear el servicio en Render}
+
+\begin{enumerate}
+    \item Ir a \url{https://render.com} e iniciar sesión con cuenta de GitHub.
+    \item En el dashboard hacer clic en \textbf{``New +''} $\rightarrow$ \textbf{``Web Service''}.
+    \item En \textbf{``Connect a repository''}, seleccionar el repositorio del proyecto.
+    \item Completar el formulario con los siguientes valores:
+\end{enumerate}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{p{4cm} p{9cm}}
+        \toprule
+        \textbf{Campo} & \textbf{Valor} \\
+        \midrule
+        Name           & \cmd{proyecto-notas-api} \\
+        Region         & Oregon (US West) \\
+        Branch         & \cmd{main} \\
+        Runtime        & Node \\
+        Root Directory & \cmd{backend/proyecto-notas-api} \\
+        Build Command  & \cmd{npm install \&\& npx prisma generate \&\& npm run build} \\
+        Start Command  & \cmd{npm run start:prod} \\
+        Instance Type  & Free \\
+        \bottomrule
+    \end{tabular}
+    \caption{Configuración del servicio en Render.}
+\end{table}
+
+\begin{importante}
+    El campo \textbf{Root Directory} es crítico en un monorepo. Render busca el \cmd{package.json} desde esa carpeta. Si se deja \cmd{backend} en lugar de \cmd{backend/proyecto-notas-api}, el build fallará.
+\end{importante}
+
+% AQUÍ COLOCAR: captura del formulario de configuración del Web Service en Render.
+% Qué mostrar: los campos Root Directory, Build Command y Start Command visibles.
+% Resaltar con recuadro rojo el campo Root Directory.
+% Por qué: es el campo que más frecuentemente se configura mal en monorepos.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{render_configuracion.png}
+    \caption{Configuración del Web Service en Render (campos críticos resaltados).}
+    \label{fig:render_config}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Agregar variables de entorno en Render}
+
+En la misma pantalla, bajar hasta \textbf{``Environment Variables''} y agregar cada variable:
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{p{4cm} p{5cm} p{4cm}}
+        \toprule
+        \textbf{Variable} & \textbf{Valor de ejemplo} & \textbf{Notas} \\
+        \midrule
+        \var{DATABASE\_URL}  & \tiny\cmd{postgresql://postgres.XXXX:PASS@host:6543/postgres?pgbouncer=true} & Transaction pooler (puerto 6543) \\[0.2cm]
+        \var{DIRECT\_URL}    & \tiny\cmd{postgresql://postgres.XXXX:PASS@host:5432/postgres} & Session pooler (puerto 5432) \\[0.2cm]
+        \var{JWT\_SECRET}    & \cmd{xK9mP2vL8nQ5rT...} & String aleatorio largo y seguro \\[0.2cm]
+        \var{JWT\_EXPIRES\_IN} & \cmd{8h} & Sin comillas \\[0.2cm]
+        \var{FRONTEND\_URL}  & \cmd{https://notas-v2-five.vercel.app} & URL definitiva de Vercel \\[0.2cm]
+        \var{EMAIL\_USER}    & \cmd{correo@gmail.com} & Gmail con App Password \\[0.2cm]
+        \var{EMAIL\_PASS}    & \cmd{xxxx xxxx xxxx xxxx} & App Password (16 caracteres) \\[0.2cm]
+        \var{PORT}           & \cmd{3000} & Render lo sobreescribe, pero conviene definirlo \\
+        \bottomrule
+    \end{tabular}
+    \caption{Variables de entorno requeridas en Render.}
+\end{table}
+
+\begin{nota}
+    En Render \textbf{no se ponen comillas} alrededor de los valores. Solo el valor puro en el campo de texto.
+\end{nota}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Lanzar el despliegue}
+
+\begin{enumerate}
+    \item Hacer clic en \textbf{``Create Web Service''}.
+    \item Render iniciará el build --- el proceso toma entre 2 y 5 minutos.
+    \item Buscar estas líneas al final del log para confirmar el éxito:
+\end{enumerate}
+
+\begin{lstlisting}[style=texto]
+Build successful
+Servidor corriendo en el puerto 3000
+==> Your service is live
+\end{lstlisting}
+
+La URL pública del backend es:
+
+\begin{lstlisting}[style=texto]
+https://notas-v2.onrender.com
+\end{lstlisting}
+
+\textbf{Guardar esta URL} --- se usará como \var{NEXT\_PUBLIC\_API\_URL} en el frontend.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Verificar que el backend responde}
+
+Abrir el navegador y entrar a \url{https://notas-v2.onrender.com/api/docs}. Si aparece la documentación Swagger, el backend está correctamente desplegado.
+
+\begin{nota}
+    En el plan gratuito de Render, el servicio entra en \textit{sleep} después de 15 minutos sin tráfico. La primera petición después del sleep puede tardar 30--60 segundos en responder.
+\end{nota}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\newpage
+\section{Fase 3 --- Frontend en Vercel}
+
+\subsection{Subir el código a GitHub}
+
+Si el repositorio ya está en GitHub, saltar al paso 3.2. Si no, ejecutar desde la raíz del proyecto:
+
+\begin{lstlisting}[style=bash]
+git add .
+git commit -m "frontend listo para despliegue"
+git push origin main
+\end{lstlisting}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Crear el proyecto en Vercel}
+
+\begin{enumerate}
+    \item Ir a \url{https://vercel.com} e iniciar sesión con cuenta de GitHub.
+    \item Hacer clic en \textbf{``Add New\ldots $\rightarrow$ Project''}.
+    \item En \textbf{``Import Git Repository''} seleccionar el repositorio del proyecto.
+    \item Expandir la sección \textbf{``Root Directory''} y escribir:
+\end{enumerate}
+
+\begin{lstlisting}[style=texto]
+frontend/notas-frontend
+\end{lstlisting}
+
+\begin{importante}
+    El campo \textbf{Root Directory} es crítico en un monorepo. Sin esto, Vercel busca el \cmd{package.json} en la raíz del repositorio y el build falla.
+\end{importante}
+
+El resto de campos se auto-detectan:
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{ll}
+        \toprule
+        \textbf{Campo} & \textbf{Valor auto-detectado} \\
+        \midrule
+        Framework Preset & Next.js \\
+        Build Command    & \cmd{next build} \\
+        Output Directory & \cmd{.next} \\
+        Install Command  & \cmd{npm install} \\
+        \bottomrule
+    \end{tabular}
+    \caption{Configuración auto-detectada por Vercel para Next.js.}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Agregar variables de entorno en Vercel}
+
+Antes de hacer clic en Deploy, expandir la sección \textbf{``Environment Variables''} y agregar:
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{p{5cm} p{8cm}}
+        \toprule
+        \textbf{Variable} & \textbf{Valor} \\
+        \midrule
+        \var{NEXT\_PUBLIC\_API\_URL} & \cmd{https://notas-v2.onrender.com/api} \\[0.2cm]
+        \var{NEXTAUTH\_SECRET}       & \cmd{notas\_escuela\_secret\_jwt\_2026\_very\_long\_and\_secure} \\[0.2cm]
+        \var{NEXTAUTH\_URL}          & (dejar vacío --- se completa en el paso 3.5) \\
+        \bottomrule
+    \end{tabular}
+    \caption{Variables de entorno requeridas en Vercel.}
+\end{table}
+
+\begin{nota}
+    \var{NEXT\_PUBLIC\_API\_URL} lleva el prefijo \cmd{NEXT\_PUBLIC\_} porque Next.js la expone al navegador. Sin ese prefijo, el cliente no puede leerla.
+\end{nota}
+
+Hacer clic en \textbf{``Deploy''}.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Primer despliegue}
+
+Vercel ejecutará el build (1--3 minutos). Al finalizar se asignan dos URLs:
+
+\begin{itemize}
+    \item \cmd{notas-v2-aa1e9wxs8-fernach0s-projects.vercel.app} --- URL del deployment específico (cambia con cada deploy, \textbf{no usar}).
+    \item \textbf{\cmd{notas-v2-five.vercel.app}} --- Dominio permanente del proyecto (\textbf{este es el que se usa}).
+\end{itemize}
+
+% AQUÍ COLOCAR: captura del dashboard de Vercel tras el primer deploy exitoso.
+% Qué mostrar: el panel "Production Deployment" con Status "Ready", la URL
+% permanente (notas-v2-five.vercel.app) y el preview de la pantalla de login.
+% Resaltar con recuadro verde la URL permanente bajo "Domains".
+% Por qué: el usuario debe identificar cuál URL usar (la permanente, no la del deploy).
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{vercel_deploy_exitoso.png}
+    \caption{Dashboard de Vercel tras deploy exitoso, mostrando el dominio permanente.}
+    \label{fig:vercel_deploy}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Actualizar NEXTAUTH\_URL en Vercel}
+
+NextAuth necesita su propia URL para generar callbacks correctamente.
+
+\begin{enumerate}
+    \item En Vercel, ir a \textbf{Settings $\rightarrow$ Environment Variables}.
+    \item Editar la variable \var{NEXTAUTH\_URL} y poner:
+\end{enumerate}
+
+\begin{lstlisting}[style=texto]
+https://notas-v2-five.vercel.app
+\end{lstlisting}
+
+\begin{enumerate}[resume]
+    \item Guardar y hacer \textbf{Redeploy} (pestaña Deployments $\rightarrow$ botón ``\ldots'' $\rightarrow$ Redeploy).
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Actualizar FRONTEND\_URL en Render}
+
+El backend tiene CORS configurado para aceptar solo el dominio del frontend.
+
+\begin{enumerate}
+    \item Ir a Render $\rightarrow$ servicio \cmd{notas-v2} $\rightarrow$ \textbf{Environment}.
+    \item Editar la variable \var{FRONTEND\_URL}:
+\end{enumerate}
+
+\begin{lstlisting}[style=texto]
+https://notas-v2-five.vercel.app
+\end{lstlisting}
+
+\begin{enumerate}[resume]
+    \item Render reiniciará el servicio automáticamente.
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Verificar que el frontend responde}
+
+\begin{enumerate}
+    \item Abrir \url{https://notas-v2-five.vercel.app} --- debe aparecer la pantalla de login.
+    \item Iniciar sesión con:
+    \begin{itemize}
+        \item \textbf{Correo:} \cmd{admin@escuela.ec}
+        \item \textbf{Contraseña:} \cmd{Notas2026!}
+    \end{itemize}
+    \item Si el dashboard carga correctamente, el despliegue está completo.
+\end{enumerate}
+
+\begin{importante}
+    \textbf{Error de CORS:} verificar que \var{FRONTEND\_URL} en Render coincide exactamente con la URL de Vercel (sin barra final \cmd{/}).\\[0.3cm]
+    \textbf{Error de NextAuth:} verificar que \var{NEXTAUTH\_URL} en Vercel coincide exactamente con la URL del deployment activo.
+\end{importante}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\newpage
+\section{Fase 4 --- Referencia de Variables de Entorno}
+
+Tabla consolidada de todas las variables de entorno del sistema en producción:
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{p{4.5cm} p{5.5cm} p{3cm}}
+        \toprule
+        \textbf{Variable} & \textbf{Descripción} & \textbf{Servicio} \\
+        \midrule
+        \var{DATABASE\_URL}          & Transaction pooler de Supabase (puerto 6543, con \cmd{?pgbouncer=true}) & Render \\[0.2cm]
+        \var{DIRECT\_URL}            & Session pooler de Supabase (puerto 5432, sin pgbouncer)                & Render \\[0.2cm]
+        \var{JWT\_SECRET}            & String secreto para firmar tokens JWT                                  & Render \\[0.2cm]
+        \var{JWT\_EXPIRES\_IN}       & Duración del token (ejemplo: \cmd{8h})                                 & Render \\[0.2cm]
+        \var{FRONTEND\_URL}          & URL de Vercel donde vive el frontend                                   & Render \\[0.2cm]
+        \var{EMAIL\_USER}            & Correo Gmail para recuperación de contraseña                           & Render \\[0.2cm]
+        \var{EMAIL\_PASS}            & App Password de Gmail (no la contraseña normal)                        & Render \\[0.2cm]
+        \var{PORT}                   & Puerto del servidor (\cmd{3000})                                       & Render \\[0.2cm]
+        \var{NEXT\_PUBLIC\_API\_URL} & URL del backend en Render                                              & Vercel \\[0.2cm]
+        \var{NEXTAUTH\_SECRET}       & Secreto para firmar sesiones de NextAuth                               & Vercel \\[0.2cm]
+        \var{NEXTAUTH\_URL}          & URL pública del frontend en Vercel                                     & Vercel \\
+        \bottomrule
+    \end{tabular}
+    \caption{Referencia completa de variables de entorno en producción.}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Credenciales de Prueba}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{lll}
+        \toprule
+        \textbf{Rol} & \textbf{Correo electrónico} & \textbf{Contraseña} \\
+        \midrule
+        Administrador & \cmd{admin@escuela.ec}     & \cmd{Notas2026!} \\
+        Profesor      & \cmd{msalazar@escuela.ec}  & \cmd{Notas2026!} \\
+        Estudiante    & \cmd{sortega@escuela.ec}   & \cmd{Notas2026!} \\
+        \bottomrule
+    \end{tabular}
+    \caption{Credenciales de prueba para verificación del sistema.}
+\end{table}
+
+\begin{importante}
+    Estas credenciales son exclusivas para pruebas. Deben cambiarse antes de un despliegue en ambiente de producción real.
+\end{importante}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\vfill
+\begin{center}
+    \rule{0.5\linewidth}{0.4pt}\\[0.3cm]
+    {\small Plan de Despliegue --- Proyecto Notas v2 --- Versión 1.0 --- \today}
+\end{center}
+
+\end{document}

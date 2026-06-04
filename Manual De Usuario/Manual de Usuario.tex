@@ -1,0 +1,489 @@
+\documentclass[12pt, a4paper]{article}
+
+% ── PAQUETES ─────────────────────────────────────────────────────────────────
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{parskip}
+
+% ── CONFIGURACIÓN HYPERREF ────────────────────────────────────────────────────
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!70!black,
+    urlcolor=blue!70!black,
+    pdftitle={Manual de Usuario - Sistema de Gestión de Notas},
+    pdfauthor={Proyecto Notas v2}
+}
+
+% ── ENCABEZADO Y PIE DE PÁGINA ───────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Sistema de Gestión de Notas}
+\lhead{\leftmark}
+\rfoot{\thepage}
+
+% ── COLORES DEL SISTEMA ───────────────────────────────────────────────────────
+\definecolor{admincolor}{RGB}{37, 99, 235}    % azul
+\definecolor{profcolor}{RGB}{5, 150, 105}     % verde
+\definecolor{estudcolor}{RGB}{217, 119, 6}    % naranja
+\definecolor{nocolor}{RGB}{220, 38, 38}       % rojo
+\definecolor{yescolor}{RGB}{22, 163, 74}      % verde
+
+% ── COMANDOS PERSONALIZADOS ───────────────────────────────────────────────────
+\newcommand{\puede}{\textcolor{yescolor}{\textbf{Sí}}}
+\newcommand{\nopuede}{\textcolor{nocolor}{\textbf{No}}}
+\newcommand{\rol}[2]{\textcolor{#1}{\textbf{#2}}}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{document}
+
+% ── PORTADA ──────────────────────────────────────────────────────────────────
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+
+    % AQUÍ COLOCAR EL LOGO DE LA INSTITUCIÓN
+    % Captura sugerida: logotipo oficial de la escuela, fondo blanco, formato PNG.
+    % Sirve para identificar a qué institución pertenece el sistema.
+    \includegraphics[width=0.35\textwidth]{logo_institucion.png}
+
+    \vspace{1.5cm}
+    {\LARGE \textbf{Sistema de Gestión de Notas}}\\[0.5cm]
+    {\Large \textit{Proyecto Notas v2}}\\[0.3cm]
+    \rule{\linewidth}{0.5pt}\\[0.8cm]
+    {\Huge \textbf{Manual de Usuario}}\\[0.8cm]
+    \rule{\linewidth}{0.5pt}
+
+    \vspace{1.5cm}
+    \begin{tabular}{ll}
+        \textbf{Autor:}   & [Nombre del Autor] \\[0.3cm]
+        \textbf{Versión:} & 1.0 \\[0.3cm]
+        \textbf{Fecha:}   & \today \\[0.3cm]
+    \end{tabular}
+
+    \vfill
+    {\small Documento de uso interno de la institución educativa}
+\end{titlepage}
+
+% ── ÍNDICE ───────────────────────────────────────────────────────────────────
+\newpage
+\tableofcontents
+\newpage
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Introducción}
+
+El \textbf{Sistema de Gestión de Notas} es una plataforma web diseñada para instituciones educativas de nivel básico y bachillerato. Permite gestionar el ciclo académico completo: desde la creación de cursos y matrículas hasta el registro de calificaciones, cálculo de promedios y subida de evidencias en formato PDF.
+
+El sistema opera enteramente desde el navegador web, sin necesidad de instalar programas adicionales en el equipo del usuario.
+
+\subsection{Propósito del documento}
+
+Este manual está dirigido a los tres tipos de usuarios del sistema: \rol{admincolor}{Administrador}, \rol{profcolor}{Profesor} y \rol{estudcolor}{Estudiante}. Describe de forma paso a paso cada funcionalidad disponible, así como las restricciones de acceso por rol.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Requisitos de Acceso}
+
+Para utilizar el sistema no se requiere instalar ningún software adicional. Los requisitos mínimos son:
+
+\begin{itemize}
+    \item Navegador web actualizado: Google Chrome, Mozilla Firefox, Microsoft Edge o Safari (versión de los últimos 2 años)
+    \item Conexión estable a internet
+    \item Correo electrónico institucional registrado en el sistema
+    \item Dispositivo: computador de escritorio, portátil o tablet (la pantalla de celular puede limitar la visualización de tablas de calificaciones)
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Primeros Pasos}
+
+\subsection{Inicio de sesión}
+
+\begin{enumerate}
+    \item Abre el navegador y dirígete a la dirección del sistema:\\
+          \url{https://notas-v2-five.vercel.app}
+    \item En la pantalla de inicio de sesión (Figura \ref{fig:login}), ingresa:
+    \begin{itemize}
+        \item \textbf{Correo electrónico:} tu email institucional (ejemplo: \texttt{admin@escuela.ec})
+        \item \textbf{Contraseña:} la contraseña asignada por el administrador
+    \end{itemize}
+    \item Haz clic en el botón \textbf{``Ingresar''}.
+    \item El sistema te redirigirá automáticamente al panel de control correspondiente a tu rol.
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    % AQUÍ COLOCAR: captura de pantalla de la pantalla de inicio de sesión.
+    % Qué mostrar: el formulario con los campos "Correo electrónico" y "Contraseña",
+    % el botón "Ingresar" y el enlace "¿Olvidaste tu contraseña?".
+    % Resaltar con un recuadro rojo el campo de correo y con otro el de contraseña.
+    % Por qué: es el primer contacto del usuario con el sistema; debe identificar
+    % exactamente dónde ingresar sus datos.
+    \includegraphics[width=0.75\textwidth]{login.png}
+    \caption{Pantalla de inicio de sesión del sistema.}
+    \label{fig:login}
+\end{figure}
+
+\subsection{Recuperación de contraseña}
+
+Si el usuario olvidó su contraseña, puede recuperarla siguiendo estos pasos:
+
+\begin{enumerate}
+    \item En la pantalla de inicio de sesión, hacer clic en \textbf{``¿Olvidaste tu contraseña?''}
+    \item Ingresar el correo electrónico institucional y hacer clic en \textbf{``Enviar''}
+    \item Revisar la bandeja de entrada --- se recibirá un correo con un enlace de recuperación
+    \item Hacer clic en el enlace del correo (tiene validez por tiempo limitado)
+    \item Ingresar y confirmar la nueva contraseña
+    \item Volver al inicio de sesión con las nuevas credenciales
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Descripción General de la Interfaz}
+
+Al iniciar sesión correctamente, el sistema muestra el \textbf{panel de control} (dashboard). La interfaz se divide en tres zonas principales:
+
+\begin{figure}[H]
+    \centering
+    % AQUÍ COLOCAR: captura del dashboard principal tras iniciar sesión como Administrador.
+    % Qué mostrar: menú lateral izquierdo con todas las opciones, área central con
+    % resumen de estadísticas (total de usuarios, cursos activos, etc.) y la
+    % barra superior con el nombre del usuario y el botón de cerrar sesión.
+    % Resaltar con flechas numeradas: 1) Menú lateral, 2) Área de contenido,
+    % 3) Barra superior.
+    % Por qué: el usuario debe orientarse en la interfaz antes de empezar a usarla.
+    \includegraphics[width=\textwidth]{dashboard.png}
+    \caption{Panel de control principal (vista del Administrador).}
+    \label{fig:dashboard}
+\end{figure}
+
+\begin{enumerate}
+    \item \textbf{Menú lateral (izquierda):} contiene los accesos a todos los módulos disponibles según el rol del usuario. Solo se muestran las opciones permitidas para cada rol.
+    \item \textbf{Área de contenido (centro):} muestra la información del módulo seleccionado --- listas, formularios, tablas de calificaciones, etc.
+    \item \textbf{Barra superior:} muestra el nombre del usuario activo y el botón para cerrar sesión.
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Roles del Sistema}
+
+El sistema tiene tres roles con accesos diferenciados. Cada usuario tiene asignado un rol al momento de ser registrado por el administrador.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{>{\bfseries}p{3cm} p{10cm}}
+        \toprule
+        Rol & Descripción \\
+        \midrule
+        \rol{admincolor}{Administrador} & Gestiona la estructura académica: usuarios, cursos, materias, matrículas y docencias. Tiene el mayor nivel de acceso. \\[0.4cm]
+        \rol{profcolor}{Profesor}       & Gestiona el contenido académico de sus materias: parciales, actividades, calificaciones y evidencias. \\[0.4cm]
+        \rol{estudcolor}{Estudiante}    & Consulta sus propias calificaciones y promedios, y sube evidencias de sus actividades. \\
+        \bottomrule
+    \end{tabular}
+    \caption{Roles del sistema y sus responsabilidades.}
+    \label{tab:roles}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Guía de Funcionalidades: Administrador}
+\label{sec:admin}
+
+\subsection{Permisos del Administrador}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{p{5cm} c p{7cm}}
+        \toprule
+        \textbf{Acción} & \textbf{¿Permitido?} & \textbf{Detalle} \\
+        \midrule
+        Crear / editar / eliminar usuarios     & \puede    & Gestión completa de cuentas \\
+        Asignar roles a usuarios               & \puede    & Administrador, Profesor, Estudiante \\
+        Gestionar años lectivos                & \puede    & Crear, editar estado, eliminar \\
+        Gestionar cursos                       & \puede    & Crear, editar, eliminar, asignar materias \\
+        Gestionar materias                     & \puede    & Crear, editar, eliminar \\
+        Matricular / desmatricular estudiantes & \puede    & Por curso \\
+        Asignar / remover docencias            & \puede    & Profesor--Materia--Curso \\
+        Ejecutar job de retención de evidencias & \puede   & Solo en años lectivos finalizados \\
+        Crear actividades académicas           & \nopuede  & Exclusivo del Profesor \\
+        Registrar calificaciones               & \nopuede  & Exclusivo del Profesor \\
+        Subir evidencias en PDF                & \nopuede  & Exclusivo del Estudiante \\
+        \bottomrule
+    \end{tabular}
+    \caption{Permisos del rol Administrador.}
+\end{table}
+
+\subsection{Gestionar usuarios}
+
+\begin{enumerate}
+    \item En el menú lateral seleccionar \textbf{``Usuarios''}.
+    \item La pantalla mostrará la lista de todos los usuarios registrados (Figura \ref{fig:usuarios}).
+    \item Para \textbf{crear un usuario}: hacer clic en \textbf{``Nuevo usuario''} y completar el formulario:
+    \begin{itemize}
+        \item Cédula (ID único de 10 dígitos)
+        \item Nombre completo
+        \item Correo electrónico institucional
+        \item Contraseña temporal
+        \item Rol: Administrador, Profesor o Estudiante
+        \item Estado inicial: Activo
+    \end{itemize}
+    \item Para \textbf{editar} un usuario: hacer clic en el ícono de lápiz de la fila correspondiente.
+    \item Para \textbf{cambiar el estado} (bloquear, inactivar): editar el usuario y modificar el campo de estado.
+    \item Para \textbf{eliminar} un usuario: hacer clic en el ícono de papelera y confirmar la acción.
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    % AQUÍ COLOCAR: captura de la pantalla de listado de usuarios.
+    % Qué mostrar: tabla con columnas Cédula, Nombre, Correo, Rol, Estado, y
+    % columna de acciones con íconos de lápiz (editar) y papelera (eliminar).
+    % Resaltar con un recuadro el botón "Nuevo usuario" en la esquina superior derecha.
+    % Por qué: es la pantalla principal de gestión; el administrador debe identificar
+    % rápidamente dónde están los controles de acción.
+    \includegraphics[width=\textwidth]{usuarios_lista.png}
+    \caption{Listado de usuarios con opciones de edición y eliminación.}
+    \label{fig:usuarios}
+\end{figure}
+
+\noindent\textbf{Importante:} Eliminar un usuario es irreversible. Si solo se desea suspender el acceso temporalmente, cambiar el estado a \textit{Inactivo} o \textit{Bloqueado} en lugar de eliminar.
+
+\subsection{Gestionar matrículas}
+
+\begin{enumerate}
+    \item Ir a \textbf{``Matrículas''} en el menú lateral.
+    \item Seleccionar el curso.
+    \item Hacer clic en \textbf{``Matricular estudiante''} y buscar al estudiante por nombre o cédula.
+    \item Para desmatricular: seleccionar al estudiante en la lista y hacer clic en \textbf{``Desmatricular''}.
+\end{enumerate}
+
+\subsection{Asignar docencias}
+
+\begin{enumerate}
+    \item Ir a \textbf{``Docencias''} en el menú lateral.
+    \item Hacer clic en \textbf{``Asignar docencia''}.
+    \item Seleccionar el \textbf{profesor}, el \textbf{curso} y la \textbf{materia} que impartirá.
+    \item Guardar. El profesor ya podrá ver ese curso-materia en su panel.
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Guía de Funcionalidades: Profesor}
+\label{sec:profesor}
+
+\subsection{Permisos del Profesor}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{p{5.5cm} c p{6.5cm}}
+        \toprule
+        \textbf{Acción} & \textbf{¿Permitido?} & \textbf{Detalle} \\
+        \midrule
+        Crear / eliminar parciales             & \puede    & Solo de sus materias asignadas \\
+        Crear / editar / eliminar actividades  & \puede    & Tareas, exámenes, proyectos, lecciones \\
+        Registrar calificaciones individuales  & \puede    & Con nota y comentario \\
+        Calificar todo el curso a la vez       & \puede    & Función de calificación masiva \\
+        Editar calificaciones ya registradas   & \puede    & \\
+        Descargar evidencias de estudiantes    & \puede    & Solo de sus actividades \\
+        Ver promedios y ranking del curso      & \puede    & \\
+        Gestionar usuarios o cursos            & \nopuede  & Exclusivo del Administrador \\
+        Matricular o desmatricular estudiantes & \nopuede  & Exclusivo del Administrador \\
+        Subir evidencias en PDF                & \nopuede  & Exclusivo del Estudiante \\
+        \bottomrule
+    \end{tabular}
+    \caption{Permisos del rol Profesor.}
+\end{table}
+
+\subsection{Crear actividades}
+
+\begin{enumerate}
+    \item En el menú seleccionar \textbf{``Actividades''}.
+    \item Seleccionar el parcial al que pertenece la actividad.
+    \item Hacer clic en \textbf{``Nueva actividad''} (Figura \ref{fig:nueva_actividad}).
+    \item Completar el formulario:
+    \begin{itemize}
+        \item \textbf{Tipo:} Tarea / Examen / Proyecto / Lección
+        \item \textbf{Título} de la actividad
+        \item \textbf{Descripción} con las instrucciones
+        \item \textbf{Fecha de inicio} y \textbf{fecha límite} de entrega
+        \item \textbf{Valor máximo} en puntos
+    \end{itemize}
+    \item Guardar. Los estudiantes del curso recibirán una notificación automática.
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    % AQUÍ COLOCAR: captura del formulario de creación de una nueva actividad.
+    % Qué mostrar: todos los campos del formulario visibles (Tipo, Título, Descripción,
+    % Fechas, Valor máximo) y el botón "Guardar" al final.
+    % Resaltar con flechas: el selector de Tipo (desplegable) y el campo de fechas,
+    % ya que son los más propensos a errores de usuario.
+    % Por qué: el profesor necesita ver exactamente qué datos debe ingresar para
+    % que la actividad aparezca correctamente en el panel del estudiante.
+    \includegraphics[width=0.8\textwidth]{nueva_actividad.png}
+    \caption{Formulario de creación de nueva actividad.}
+    \label{fig:nueva_actividad}
+\end{figure}
+
+\subsection{Registrar calificaciones}
+
+\textbf{Calificación individual:}
+\begin{enumerate}
+    \item Ir a \textbf{``Calificaciones''} y seleccionar la actividad.
+    \item Buscar al estudiante en la lista y hacer clic en \textbf{``Calificar''}.
+    \item Ingresar la nota numérica y un comentario opcional.
+    \item Guardar.
+\end{enumerate}
+
+\textbf{Calificación masiva (todo el curso):}
+\begin{enumerate}
+    \item Ir a \textbf{``Calificaciones''} y seleccionar la actividad.
+    \item Hacer clic en \textbf{``Calificar curso completo''} (Figura \ref{fig:calificaciones_bulk}).
+    \item Aparecerá la lista completa de estudiantes del curso. Ingresar la nota de cada uno.
+    \item Hacer clic en \textbf{``Guardar todas''}.
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    % AQUÍ COLOCAR: captura de la pantalla de calificación masiva.
+    % Qué mostrar: tabla con la columna de nombres de estudiantes y la columna de
+    % entrada de nota para cada uno, más el botón "Guardar todas" al final.
+    % Resaltar: la columna de notas con un recuadro azul para indicar que es editable.
+    % Por qué: la calificación masiva es la función más usada y debe quedar clara
+    % para que el profesor no calificar uno por uno innecesariamente.
+    \includegraphics[width=\textwidth]{calificaciones_bulk.png}
+    \caption{Pantalla de calificación masiva del curso completo.}
+    \label{fig:calificaciones_bulk}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Guía de Funcionalidades: Estudiante}
+\label{sec:estudiante}
+
+\subsection{Permisos del Estudiante}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{p{5.5cm} c p{6.5cm}}
+        \toprule
+        \textbf{Acción} & \textbf{¿Permitido?} & \textbf{Detalle} \\
+        \midrule
+        Ver sus propias calificaciones         & \puede    & Por actividad, parcial y materia \\
+        Ver su promedio por materia y general  & \puede    & \\
+        Ver su posición en el ranking del curso & \puede   & \\
+        Subir evidencia en PDF                 & \puede    & Máx. 10 MB, un PDF por actividad \\
+        Ver y eliminar sus propias evidencias  & \puede    & \\
+        Ver y gestionar notificaciones         & \puede    & \\
+        Ver calificaciones de otros estudiantes & \nopuede & \\
+        Crear o editar actividades             & \nopuede  & Exclusivo del Profesor \\
+        Registrar calificaciones               & \nopuede  & Exclusivo del Profesor \\
+        Gestionar usuarios, cursos o materias  & \nopuede  & Exclusivo del Administrador \\
+        \bottomrule
+    \end{tabular}
+    \caption{Permisos del rol Estudiante.}
+\end{table}
+
+\subsection{Ver mis calificaciones}
+
+\begin{enumerate}
+    \item Al iniciar sesión, el dashboard muestra un resumen de las notas recientes.
+    \item Ir a \textbf{``Mis calificaciones''} en el menú lateral (Figura \ref{fig:mis_calificaciones}).
+    \item Seleccionar el año lectivo y la materia para filtrar los resultados.
+    \item La lista mostrará cada actividad con la nota obtenida y el comentario del profesor.
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    % AQUÍ COLOCAR: captura de la pantalla "Mis calificaciones" del estudiante.
+    % Qué mostrar: tabla con columnas Actividad, Tipo, Fecha de entrega, Nota,
+    % Comentario del profesor. Mostrar al menos 3 filas de ejemplo.
+    % Resaltar: la columna de Nota con un recuadro verde para destacar la información
+    % más buscada por el estudiante.
+    % Por qué: es la pantalla más consultada por los estudiantes; debe verse de
+    % forma clara y sin confusiones.
+    \includegraphics[width=\textwidth]{mis_calificaciones.png}
+    \caption{Pantalla de calificaciones del estudiante.}
+    \label{fig:mis_calificaciones}
+\end{figure}
+
+\subsection{Subir una evidencia}
+
+\begin{enumerate}
+    \item Ir a \textbf{``Mis actividades''} en el menú lateral.
+    \item Localizar la actividad para la que se desea subir la evidencia.
+    \item Hacer clic en \textbf{``Subir evidencia''} (Figura \ref{fig:subir_evidencia}).
+    \item Seleccionar el archivo PDF desde el dispositivo.
+    \item Confirmar la subida.
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    % AQUÍ COLOCAR: captura del cuadro de diálogo o pantalla de subida de evidencia.
+    % Qué mostrar: el botón de selección de archivo, el nombre del archivo seleccionado
+    % y el botón de confirmación "Subir".
+    % Resaltar: la indicación de "Solo PDF, máx. 10 MB" con una flecha y recuadro rojo.
+    % Por qué: los estudiantes frecuentemente intentan subir archivos en formato
+    % incorrecto; esta imagen les ayuda a ver la restricción antes de intentarlo.
+    \includegraphics[width=0.7\textwidth]{subir_evidencia.png}
+    \caption{Pantalla de subida de evidencia en PDF.}
+    \label{fig:subir_evidencia}
+\end{figure}
+
+\noindent\textbf{Requisitos del archivo:}
+\begin{itemize}
+    \item Formato: \textbf{PDF únicamente}
+    \item Tamaño máximo: \textbf{10 MB}
+    \item Solo se permite \textbf{una evidencia por actividad}
+\end{itemize}
+
+\subsection{Eliminar y reemplazar una evidencia}
+
+Si se subió un archivo incorrecto:
+
+\begin{enumerate}
+    \item Ir a \textbf{``Mis evidencias''} en el menú lateral.
+    \item Localizar la evidencia que se desea eliminar.
+    \item Hacer clic en el ícono de papelera y confirmar la eliminación.
+    \item Una vez eliminada, volver a \textbf{``Mis actividades''} y subir el archivo correcto.
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Preguntas Frecuentes (FAQ)}
+
+\subsection*{¿Por qué no puedo iniciar sesión si mi contraseña es correcta?}
+La cuenta podría estar en estado \textit{Inactivo} o \textit{Bloqueado}. Contactar al administrador del sistema para que reactive el acceso.
+
+\subsection*{¿Por qué no veo ningún curso ni materia en mi panel?}
+\begin{itemize}
+    \item \textbf{Profesor:} el administrador aún no ha asignado una docencia (Profesor--Materia--Curso).
+    \item \textbf{Estudiante:} el administrador aún no ha realizado la matrícula en ningún curso.
+\end{itemize}
+
+\subsection*{¿Puedo subir evidencias en formato Word o imagen?}
+No. El sistema acepta únicamente archivos en formato \textbf{PDF}. Se debe convertir el documento antes de subirlo.
+
+\subsection*{¿Qué hago si subí la evidencia equivocada?}
+Eliminarla desde \textbf{``Mis evidencias''} y subir el archivo correcto. Hacerlo antes de la fecha límite de entrega de la actividad.
+
+\subsection*{¿Por qué el promedio no se actualiza después de que el profesor me calificó?}
+El promedio se recalcula manualmente por el profesor después de registrar todas las calificaciones del parcial. Si persiste el problema, comunicarse con el profesor de la materia.
+
+\subsection*{¿Puedo cambiar mi correo electrónico?}
+No directamente. El correo electrónico solo puede ser modificado por el administrador del sistema.
+
+\subsection*{¿Qué significa el estado ``Bloqueado'' en mi cuenta?}
+El administrador ha restringido temporalmente el acceso. No será posible iniciar sesión hasta que el administrador cambie el estado a \textit{Activo}.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\vfill
+\begin{center}
+    \rule{0.5\linewidth}{0.4pt}\\[0.3cm]
+    {\small Para soporte técnico, contactar al administrador del sistema de la institución.}\\[0.2cm]
+    {\small Sistema de Gestión de Notas --- Versión 1.0 --- \today}
+\end{center}
+
+\end{document}

@@ -1,0 +1,509 @@
+\documentclass[12pt, a4paper]{article}
+
+% ── PAQUETES ─────────────────────────────────────────────────────────────────
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{parskip}
+\usepackage{listings}
+
+% ── CONFIGURACIÓN HYPERREF ────────────────────────────────────────────────────
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!70!black,
+    urlcolor=blue!70!black,
+    pdftitle={Plan de Operaciones - Sistema de Gestión de Notas},
+    pdfauthor={Proyecto Notas v2}
+}
+
+% ── ENCABEZADO Y PIE DE PÁGINA ───────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Sistema de Gestión de Notas}
+\lhead{\leftmark}
+\rfoot{\thepage}
+
+% ── COLORES ───────────────────────────────────────────────────────────────────
+\definecolor{warningbg}{RGB}{255, 243, 205}
+\definecolor{warningborder}{RGB}{217, 119, 6}
+\definecolor{codebg}{RGB}{245, 245, 245}
+\definecolor{codeborder}{RGB}{180, 180, 180}
+
+% ── CAJA DE NOTA/ADVERTENCIA ──────────────────────────────────────────────────
+\newcommand{\nota}[1]{%
+    \vspace{0.5em}
+    \noindent\fcolorbox{warningborder}{warningbg}{%
+        \parbox{\dimexpr\textwidth-2\fboxsep-2\fboxrule\relax}{%
+            \vspace{0.3em}#1\vspace{0.3em}%
+        }%
+    }%
+    \vspace{0.5em}
+}
+
+% ── CONFIGURACIÓN DE LISTINGS ─────────────────────────────────────────────────
+\lstset{
+    backgroundcolor=\color{codebg},
+    frame=single,
+    rulecolor=\color{codeborder},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    breakatwhitespace=false,
+    showstringspaces=false,
+    columns=flexible,
+    keepspaces=true,
+    language={}
+}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{document}
+
+% ── PORTADA ──────────────────────────────────────────────────────────────────
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+
+    \includegraphics[width=0.35\textwidth]{logo_institucion.png}
+
+    \vspace{1.5cm}
+    {\LARGE \textbf{Sistema de Gestión de Notas}}\\[0.5cm]
+    {\Large \textit{Proyecto Notas v2}}\\[0.3cm]
+    \rule{\linewidth}{0.5pt}\\[0.8cm]
+    {\Huge \textbf{Plan de Operaciones}}\\[0.8cm]
+    \rule{\linewidth}{0.5pt}
+
+    \vspace{1.5cm}
+    \begin{tabular}{ll}
+        \textbf{Autor:}   & [Nombre del Autor] \\[0.3cm]
+        \textbf{Versión:} & 1.0 \\[0.3cm]
+        \textbf{Fecha:}   & \today \\[0.3cm]
+    \end{tabular}
+
+    \vfill
+    {\small Documento de referencia DevOps para el mantenimiento y operación del sistema en producción.}
+\end{titlepage}
+
+% ── ÍNDICE ───────────────────────────────────────────────────────────────────
+\newpage
+\tableofcontents
+\newpage
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section*{Arquitectura en Producción}
+\addcontentsline{toc}{section}{Arquitectura en Producción}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{>{\bfseries}p{3.5cm} p{4.5cm} p{6cm}}
+        \toprule
+        Componente & Tecnología & Plataforma \\
+        \midrule
+        Backend       & NestJS + Prisma ORM & Render (Web Service) \\[0.3cm]
+        Frontend      & Next.js + NextAuth  & Vercel \\[0.3cm]
+        Base de datos & PostgreSQL          & Supabase (producción) / PostgreSQL local (desarrollo) \\
+        \bottomrule
+    \end{tabular}
+    \caption{Componentes del sistema en producción.}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Monitoreo}
+
+\subsection{Backend --- Dashboard de Render}
+
+Desde el dashboard del servicio en Render hay dos secciones de monitoreo:
+
+\begin{itemize}
+    \item \textbf{``Metrics''} (pestaña lateral) --- muestra CPU, memoria y uso de disco en tiempo real.
+    \item \textbf{``Logs''} (pestaña lateral) --- muestra la salida del proceso Node.js en tiempo real.
+\end{itemize}
+
+\bigskip
+\textbf{Métricas de sistema (pestaña ``Metrics'')}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{p{3.5cm} p{4.5cm} p{5.5cm}}
+        \toprule
+        \textbf{Métrica} & \textbf{Umbral de alerta} & \textbf{Acción} \\
+        \midrule
+        CPU Usage
+            & > 80\% sostenido por más de 2 min
+            & Revisar endpoints con alta carga; considerar upgrade de instancia \\[0.4cm]
+        Memory Usage
+            & > 85\% del límite del plan
+            & Buscar memory leaks en el código; revisar queries de Prisma sin paginación \\[0.4cm]
+        Disk I/O
+            & Picos frecuentes
+            & Evaluar si el almacenamiento de evidencias en BD es adecuado \\
+        \bottomrule
+    \end{tabular}
+    \caption{Umbrales de alerta para métricas del backend en Render.}
+\end{table}
+
+\bigskip
+\textbf{Logs del servicio (pestaña ``Logs'')}
+
+Las entradas críticas a monitorear son:
+
+\begin{itemize}
+    \item \texttt{[NestApplication] Nest application successfully started} --- confirma arranque correcto
+    \item \texttt{PrismaClientKnownRequestError} --- errores de base de datos (constraints, timeouts)
+    \item \texttt{Error: Cannot find module} --- error de build o archivo faltante en \texttt{dist/}
+    \item \texttt{Exited with status 1} --- el proceso murió; revisar el stack trace inmediatamente arriba
+\end{itemize}
+
+\bigskip
+\textbf{Disponibilidad}
+
+En el plan gratuito de Render, el servicio entra en estado \textit{sleep} tras 15 minutos de inactividad.
+La primera petición después del sleep puede tardar entre 30 y 60 segundos.
+Para proyectos en producción real, se recomienda un \textbf{cron job externo}
+(ej.\ UptimeRobot, plan gratuito) que haga ping al endpoint \texttt{/api} cada 10 minutos
+para mantener el servicio activo.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Frontend --- Dashboard de Vercel}
+
+El monitoreo en Vercel está distribuido en cuatro secciones del menú lateral.
+
+\bigskip
+\textbf{Pestaña ``Logs''}
+
+Muestra los logs de runtime en tiempo real (peticiones HTTP, errores de Server Components,
+respuestas de las rutas \texttt{/api}).
+Columnas visibles: \texttt{Time}, \texttt{Status}, \texttt{Host}, \texttt{Request}, \texttt{Messages}.
+Es la primera pestaña a revisar ante cualquier error en producción.
+
+\bigskip
+\textbf{Pestaña ``Analytics''}
+
+Requiere activación: botón \textbf{``Enable''} dentro de la pestaña.
+Una vez activa, recolecta datos de tráfico desde ese momento (no muestra datos previos a la activación).
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{p{4cm} p{9cm}}
+        \toprule
+        \textbf{Métrica} & \textbf{Qué indica} \\
+        \midrule
+        \textbf{Visitors}    & Usuarios únicos que visitaron el sitio \\[0.3cm]
+        \textbf{Page Views}  & Total de páginas cargadas \\[0.3cm]
+        \textbf{Bounce Rate} & Porcentaje de usuarios que salieron sin interactuar \\
+        \bottomrule
+    \end{tabular}
+    \caption{Métricas disponibles en la pestaña Analytics de Vercel.}
+\end{table}
+
+\bigskip
+\textbf{Pestaña ``Speed Insights''}
+
+Muestra las métricas de rendimiento real (Core Web Vitals) medidas desde los navegadores de los usuarios.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{p{5cm} p{3cm} p{5.5cm}}
+        \toprule
+        \textbf{Métrica} & \textbf{Umbral aceptable} & \textbf{Qué indica} \\
+        \midrule
+        \textbf{Time to First Byte (TTFB)}
+            & < 800ms
+            & Tiempo de respuesta del servidor Next.js \\[0.4cm]
+        \textbf{Largest Contentful Paint (LCP)}
+            & < 2.5s
+            & Velocidad de carga percibida por el usuario \\[0.4cm]
+        \textbf{Cumulative Layout Shift (CLS)}
+            & < 0.1
+            & Estabilidad visual de la página \\
+        \bottomrule
+    \end{tabular}
+    \caption{Core Web Vitals monitoreados en Speed Insights de Vercel.}
+\end{table}
+
+\bigskip
+\textbf{Pestaña ``Deployments''}
+
+Historial de todos los deploys. Los estados posibles son:
+
+\begin{itemize}
+    \item \texttt{Ready} --- despliegue exitoso
+    \item \texttt{Error} --- build falló; hacer clic en el deployment para ver el log completo
+    \item \texttt{Canceled} --- fue reemplazado por un deploy más reciente
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Gestión de Incidentes}
+
+\subsection{Protocolo General}
+
+Ante cualquier fallo, el flujo de diagnóstico es:
+
+\vspace{0.5em}
+\begin{center}
+\begin{tabular}{c}
+    \textbf{1.} Identificar síntoma (error 500, timeout, pantalla en blanco) \\
+    $\downarrow$ \\
+    \textbf{2.} Revisar logs del servicio afectado (Render o Vercel) \\
+    $\downarrow$ \\
+    \textbf{3.} Reproducir el error localmente con las mismas variables de entorno \\
+    $\downarrow$ \\
+    \textbf{4.} Aplicar corrección en rama separada $\to$ push $\to$ deploy automático \\
+    $\downarrow$ \\
+    \textbf{5.} Verificar en producción y documentar el incidente \\
+\end{tabular}
+\end{center}
+\vspace{0.5em}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Escenario: el backend falla en Render (\texttt{Exited with status 1})}
+
+Este error significa que el proceso Node.js terminó de forma inesperada. El protocolo es:
+
+\begin{enumerate}
+    \item \textbf{Ir a Render $\to$ Logs} y leer las líneas inmediatamente anteriores al
+          \texttt{Exited with status 1}. El error real siempre está ahí
+          (ejemplo: \texttt{PrismaClientInitializationError}, \texttt{Cannot find module}, \texttt{SyntaxError}).
+    \item \textbf{Verificar las variables de entorno} en Render $\to$ Environment.
+          Los errores más comunes son \texttt{DATABASE\_URL} mal formada o \texttt{JWT\_SECRET} vacío.
+    \item \textbf{Verificar que el build produjo \texttt{dist/main.js}}: si el log de build no muestra
+          la compilación de NestJS, el problema es en la fase de build, no de runtime.
+    \item Si el error persiste, usar \textbf{Instant Rollback} en Render (botón en la pestaña Deployments)
+          para revertir al último deployment estable mientras se investiga.
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Escenario: la base de datos se desconecta}
+
+Supabase puede rechazar conexiones por límite del plan gratuito
+(máximo 60 conexiones simultáneas con el pooler de transacciones).
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{p{3.8cm} p{4.5cm} p{5.2cm}}
+        \toprule
+        \textbf{Síntoma} & \textbf{Causa probable} & \textbf{Acción} \\
+        \midrule
+        \texttt{Connection pool timeout} en logs
+            & Se agotaron las conexiones del pooler
+            & Verificar que \texttt{DATABASE\_URL} usa el puerto 6543 (Transaction pooler), no el 5432 directo \\[0.5cm]
+        \texttt{ECONNREFUSED}
+            & Supabase pausó el proyecto por inactividad (plan gratuito pausa tras 7 días sin uso)
+            & Ir al dashboard de Supabase $\to$ botón \textbf{``Restore project''} \\[0.5cm]
+        \texttt{P1001: Can't reach database server}
+            & Red intermitente o credenciales cambiadas
+            & Verificar que la contraseña de la BD no fue rotada en Supabase \\
+        \bottomrule
+    \end{tabular}
+    \caption{Síntomas y acciones ante desconexión de la base de datos.}
+\end{table}
+
+\nota{\textbf{Importante:} Supabase en plan gratuito pausa los proyectos inactivos automáticamente.
+Si la app no recibe tráfico por más de 7 días, la base de datos se pausará y todas las peticiones
+fallarán hasta restaurarla manualmente desde el dashboard de Supabase.}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Escenario: el frontend no carga o muestra error de CORS}
+
+\begin{enumerate}
+    \item Abrir las herramientas de desarrollo del navegador $\to$ pestaña \textbf{Network}
+          $\to$ buscar la petición fallida.
+    \item Si el error es \texttt{CORS: No 'Access-Control-Allow-Origin'}, significa que
+          \texttt{FRONTEND\_URL} en Render no coincide exactamente con la URL de Vercel
+          (verificar que no haya barra final \texttt{/}).
+    \item Si el error es \texttt{401 Unauthorized} en todas las peticiones,
+          \texttt{NEXTAUTH\_SECRET} o \texttt{NEXTAUTH\_URL} están mal configurados en Vercel.
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Seguridad}
+
+\subsection{Manejo de Variables de Entorno (Secretos)}
+
+\textbf{Principios base}
+
+\begin{itemize}
+    \item Ningún secreto debe estar en el código fuente ni en el repositorio de Git.
+    \item El archivo \texttt{.env.local} está en \texttt{.gitignore} --- nunca debe eliminarse de esa lista.
+    \item Los secretos en Render y Vercel se almacenan cifrados en reposo por las plataformas.
+\end{itemize}
+
+\bigskip
+\textbf{Variables críticas y su gestión}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{p{3.2cm} p{1.8cm} p{4cm} p{4cm}}
+        \toprule
+        \textbf{Variable} & \textbf{Plataforma} & \textbf{Riesgo si se expone} & \textbf{Política de rotación} \\
+        \midrule
+        \texttt{DATABASE\_URL}
+            & Render
+            & Acceso total a la BD
+            & Rotar si hay sospecha de compromiso \\[0.4cm]
+        \texttt{DIRECT\_URL}
+            & Render
+            & Acceso directo sin pooler
+            & Rotar junto con \texttt{DATABASE\_URL} \\[0.4cm]
+        \texttt{JWT\_SECRET}
+            & Render
+            & Permite forjar tokens de cualquier usuario
+            & Rotar cada 6 meses o ante sospecha \\[0.4cm]
+        \texttt{NEXTAUTH\_SECRET}
+            & Vercel
+            & Invalida todas las sesiones activas
+            & Rotar junto con \texttt{JWT\_SECRET} \\[0.4cm]
+        \texttt{EMAIL\_PASS}
+            & Render
+            & Permite enviar correos desde la cuenta
+            & Usar App Password de Gmail, no la contraseña real \\
+        \bottomrule
+    \end{tabular}
+    \caption{Variables críticas de entorno y sus políticas de rotación.}
+\end{table}
+
+\bigskip
+\textbf{Procedimiento para rotar un secreto}
+
+\begin{enumerate}
+    \item Generar el nuevo valor (ej.\ nuevo \texttt{JWT\_SECRET} con un generador de strings aleatorios).
+    \item Actualizar la variable en la plataforma correspondiente (Render o Vercel).
+    \item Hacer Redeploy para que el servicio tome el nuevo valor.
+    \item Verificar que el servicio arrancó correctamente antes de cerrar la sesión anterior.
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Actualizaciones de Dependencias de Node.js}
+
+Las dependencias desactualizadas son la principal fuente de vulnerabilidades en proyectos Node.js.
+
+\bigskip
+\textbf{Revisión periódica}
+
+Ejecutar mensualmente en ambos proyectos (backend y frontend):
+
+\begin{lstlisting}
+npm audit
+\end{lstlisting}
+
+Esto lista las vulnerabilidades conocidas con su nivel de severidad
+(\texttt{low}, \texttt{moderate}, \texttt{high}, \texttt{critical}).
+Las de nivel \texttt{high} y \texttt{critical} deben resolverse antes de cualquier deploy a producción.
+
+\bigskip
+\textbf{Actualización controlada}
+
+No usar \texttt{npm audit fix --force} directamente en producción --- puede introducir cambios
+que rompan la API. El flujo correcto es:
+
+\begin{enumerate}
+    \item Crear una rama separada: \texttt{git checkout -b fix/security-updates}
+    \item Aplicar las correcciones y ejecutar pruebas locales.
+    \item Hacer merge a \texttt{main} solo después de verificar que el comportamiento es correcto.
+\end{enumerate}
+
+\bigskip
+\textbf{Fijar la versión de Node.js}
+
+Render y Vercel usan la versión de Node.js especificada en el campo \texttt{engines} del \texttt{package.json}.
+Si no está definido, usan su versión por defecto. Para fijar la versión y evitar actualizaciones
+automáticas inesperadas, agregar al \texttt{package.json} de cada proyecto:
+
+\begin{lstlisting}
+"engines": {
+  "node": ">=20.0.0"
+}
+\end{lstlisting}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Respaldo (Backup)}
+
+\subsection{Estrategia para Supabase (Producción)}
+
+Supabase en plan gratuito \textbf{no incluye backups automáticos programados}.
+La estrategia recomendada para este stack es un respaldo manual periódico usando \texttt{pg\_dump}.
+
+\bigskip
+\textbf{Procedimiento de respaldo manual}
+
+\begin{enumerate}
+    \item Obtener la \textbf{Direct Connection URL} de Supabase (puerto 5432, no el pooler):
+
+\begin{lstlisting}
+postgresql://postgres.XXXX:PASSWORD@aws-0-sa-east-1.pooler.supabase.com:5432/postgres
+\end{lstlisting}
+
+    \item Ejecutar \texttt{pg\_dump} desde cualquier máquina con PostgreSQL instalado:
+
+\begin{lstlisting}
+pg_dump "postgresql://postgres.XXXX:PASSWORD@host:5432/postgres" ^
+  --no-owner --no-acl ^
+  -f respaldo_YYYYMMDD.sql
+\end{lstlisting}
+
+    \item Guardar el archivo \texttt{.sql} generado en un almacenamiento externo
+          (Google Drive, repositorio privado, etc.).
+\end{enumerate}
+
+\bigskip
+\textbf{Frecuencia recomendada}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{p{6cm} p{7.5cm}}
+        \toprule
+        \textbf{Tipo de dato} & \textbf{Frecuencia de respaldo} \\
+        \midrule
+        Estructura de tablas (DDL)
+            & Cada vez que cambie el schema de Prisma \\[0.3cm]
+        Datos de producción
+            & Semanal (o antes de cualquier migración) \\[0.3cm]
+        Datos de prueba / seed
+            & Una sola vez --- ya documentado en el Plan de Despliegue \\
+        \bottomrule
+    \end{tabular}
+    \caption{Frecuencia de respaldo recomendada por tipo de dato.}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Restauración de un Respaldo}
+
+Si se necesita restaurar la base de datos desde un archivo \texttt{.sql}:
+
+\begin{lstlisting}
+psql "postgresql://postgres.XXXX:PASSWORD@host:5432/postgres" ^
+  -f respaldo_YYYYMMDD.sql
+\end{lstlisting}
+
+\nota{\textbf{Advertencia:} La restauración sobreescribe los datos existentes.
+Siempre hacer un respaldo del estado actual antes de restaurar uno anterior.}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Respaldo del Código Fuente}
+
+El repositorio de GitHub actúa como respaldo del código. Para reforzarlo:
+
+\begin{itemize}
+    \item Mantener al menos dos ramas activas: \texttt{main} (producción) y \texttt{develop} (desarrollo).
+    \item Los históricos de commits de Git son un respaldo implícito de cada versión del código.
+    \item Vercel guarda el historial completo de deployments con la opción de \textbf{Instant Rollback}
+          a cualquier versión anterior sin necesidad de hacer un nuevo push.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\vfill
+\begin{center}
+    \rule{0.5\linewidth}{0.4pt}\\[0.3cm]
+    {\small Documento de referencia DevOps para el mantenimiento y operación del sistema en producción.}\\[0.2cm]
+    {\small Sistema de Gestión de Notas --- Versión 1.0 --- \today}
+\end{center}
+
+\end{document}

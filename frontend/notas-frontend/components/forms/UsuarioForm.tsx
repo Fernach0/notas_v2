@@ -26,7 +26,7 @@ const schema = z.object({
   contrasenaUsuario: z.string().min(6, 'Mínimo 6 caracteres').optional().or(z.literal('')),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
   estadoUsuario: z.enum(['ACTIVO', 'INACTIVO', 'BLOQUEADO']),
-  idRol: z.number({ error: 'Selecciona un rol' }).int().min(1, 'Selecciona un rol'),
+  idRol: z.number({ error: 'Cedula Duplicada' }).int().min(1, 'Cedula Duplicada'),
 });
 
 type FormData = z.infer<typeof schema>;
