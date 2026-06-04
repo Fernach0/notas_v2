@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -20,16 +21,16 @@ function validarCedula(cedula: string): boolean {
   return verificador === parseInt(cedula[9]);
 }
 
-const schema = z.object({
+const baseSchema = z.object({
   idUsuario: z.string().refine(validarCedula, { message: 'Cédula ecuatoriana inválida' }),
   nombreCompleto: z.string().min(3, 'Mínimo 3 caracteres').max(100),
   contrasenaUsuario: z.string().min(6, 'Mínimo 6 caracteres').optional().or(z.literal('')),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
   estadoUsuario: z.enum(['ACTIVO', 'INACTIVO', 'BLOQUEADO']),
-  idRol: z.number({ error: 'Cedula Duplicada' }).int().min(1, 'Cedula Duplicada'),
+  idRol: z.number({ error: 'Selecciona un rol' }).int().min(1, 'Selecciona un rol'),
 });
 
-type FormData = z.infer<typeof schema>;
+type FormData = z.infer<typeof baseSchema>;
 
 interface Props {
   item?: Usuario | null;
@@ -44,6 +45,19 @@ const rolesOpciones = [
 ];
 
 export default function UsuarioForm({ item, onSubmit, isLoading }: Props) {
+  const isEditing = item != null;
+
+  const schema = useMemo(
+    () =>
+      (isEditing
+        ? baseSchema
+        : baseSchema.extend({
+            contrasenaUsuario: z.string().min(6, 'Mínimo 6 caracteres'),
+          })
+      ) as typeof baseSchema,
+    [isEditing],
+  );
+
   const { register, handleSubmit, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: item
